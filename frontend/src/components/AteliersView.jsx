@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
+import { Factory, Plus, Users, Cpu, Layers, X, ShieldCheck, Check } from 'lucide-react';
 
 export default function AteliersView({ data, onAddAtelier, onAddLigne }) {
   const [showAtelierModal, setShowAtelierModal] = useState(false);
   const [showLigneModal, setShowLigneModal] = useState(false);
-  const [selectedAtelierId, setSelectedAtelierId] = useState(data.ateliers[0]?.id || 1);
 
   const [nouveauNumAtelier, setNouveauNumAtelier] = useState('');
   const [nouveauLibelleAtelier, setNouveauLibelleAtelier] = useState('');
@@ -40,79 +40,111 @@ export default function AteliersView({ data, onAddAtelier, onAddLigne }) {
   return (
     <div className="space-y-6">
       
-      {/* En-tête */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-2 border-b border-slate-200">
+      {/* En-tête de section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-3 border-b border-slate-200">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-            Module 1 : Ateliers & Lignes de Fabrication
-          </h2>
-          <p className="text-sm text-slate-500 mt-1">
-            Hiérarchie physique : 1 Atelier $\rightarrow$ plusieurs Lignes de fabrication $\rightarrow$ Machines.
+          <div className="flex items-center space-x-2">
+            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+              Module 1 : Ateliers & Lignes de Fabrication
+            </h2>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
+              CRUD &bull; M1
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">
+            Hiérarchie industrielle : 1 Atelier possède 1 Responsable attitré et regroupe plusieurs Lignes composées de Machines.
           </p>
         </div>
-        <div className="mt-3 sm:mt-0 flex items-center space-x-3">
+
+        <div className="flex items-center space-x-2.5">
           <button
             onClick={() => setShowAtelierModal(true)}
-            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold shadow transition"
+            className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs hover:shadow-md transition active:scale-[0.98]"
           >
-            + Créer un Atelier
+            <Plus className="w-4 h-4" />
+            <span>Créer un Atelier</span>
           </button>
           <button
             onClick={() => setShowLigneModal(true)}
-            className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-sm font-semibold shadow transition"
+            className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold shadow-xs hover:shadow-md transition active:scale-[0.98]"
           >
-            + Ajouter une Ligne
+            <Plus className="w-4 h-4 text-cyan-400" />
+            <span>Ajouter une Ligne</span>
           </button>
         </div>
       </div>
 
-      {/* Grille des Ateliers */}
+      {/* Grille des Ateliers & Lignes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {data.ateliers.map((atelier) => (
-          <div key={atelier.id} className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <div key={atelier.id} className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs hover:shadow-md transition">
+            
+            {/* Header de l'atelier */}
             <div className="flex items-start justify-between">
               <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
-                  Atelier #{atelier.numeroAtelier}
-                </span>
-                <h3 className="text-lg font-bold text-slate-900 mt-1">{atelier.libelle}</h3>
-                <div className="text-xs text-slate-500 mt-0.5">
-                  Responsable : <span className="font-semibold text-slate-700">{atelier.responsable_nom}</span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-[11px] font-mono font-extrabold uppercase px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                    Atelier #{atelier.numeroAtelier}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">ID: {atelier.id}</span>
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mt-1.5">{atelier.libelle}</h3>
+                
+                {/* Responsable attitré (Contrainte 1:1 UML) */}
+                <div className="mt-2 flex items-center space-x-2 text-xs text-slate-600 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200/60 w-fit">
+                  <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Responsable : <strong>{atelier.responsable_nom || "Cadre désigné"}</strong></span>
                 </div>
               </div>
-              <span className="px-2.5 py-1 bg-slate-100 text-slate-700 font-semibold text-xs rounded-full">
-                {atelier.lignes.length} Ligne(s)
-              </span>
+
+              <div className="text-right">
+                <span className="px-3 py-1 bg-slate-100 text-slate-700 font-mono font-bold text-xs rounded-full border border-slate-200">
+                  {atelier.lignes?.length || 0} ligne(s)
+                </span>
+              </div>
             </div>
 
-            {/* Lignes de fabrication rattachées */}
-            <div className="mt-5 space-y-2.5">
-              <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Lignes de production rattachées
+            {/* Lignes de production rattachées */}
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-400 font-mono">
+                <span>Lignes de fabrication associées</span>
+                <span>Effectif Requis</span>
               </div>
-              {atelier.lignes.map((ligne) => (
-                <div
-                  key={ligne.id}
-                  className="p-3 bg-slate-50 rounded-lg border border-slate-200/80 flex items-center justify-between"
-                >
-                  <div className="flex items-center space-x-3">
-                    <span className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs">
-                      L{ligne.numeroLigne}
-                    </span>
-                    <div>
-                      <div className="text-sm font-semibold text-slate-800">
-                        Ligne {ligne.numeroLigne}
+
+              {atelier.lignes?.length === 0 ? (
+                <div className="p-4 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                  Aucune ligne configurée dans cet atelier.
+                </div>
+              ) : (
+                atelier.lignes?.map((ligne) => (
+                  <div
+                    key={ligne.id}
+                    className="p-3.5 bg-slate-50/80 hover:bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between transition"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 rounded-lg bg-blue-600 text-white font-mono font-bold flex items-center justify-center text-xs shadow-xs">
+                        L{ligne.numeroLigne}
                       </div>
-                      <div className="text-xs text-slate-500">
-                        Effectif requis : <strong className="text-slate-700">{ligne.nbOperateursNecessaires} opérateurs</strong>
+                      <div>
+                        <div className="text-xs font-bold text-slate-900 font-mono">
+                          Ligne #{ligne.numeroLigne}
+                        </div>
+                        <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
+                          <Cpu className="w-3 h-3 text-slate-400" />
+                          <span>{ligne.nombre_machines || 1} machine(s) active(s)</span>
+                        </div>
                       </div>
                     </div>
+
+                    <div className="flex items-center space-x-2 font-mono">
+                      <span className="text-xs px-2.5 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg font-bold flex items-center gap-1">
+                        <Users className="w-3 h-3" />
+                        <span>{ligne.nbOperateursNecessaires} ouvriers</span>
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded font-medium">
-                    {ligne.nombre_machines || 1} machine(s)
-                  </span>
-                </div>
-              ))}
+                ))
+              )}
             </div>
 
           </div>
@@ -121,45 +153,63 @@ export default function AteliersView({ data, onAddAtelier, onAddLigne }) {
 
       {/* Modal Créer Atelier */}
       {showAtelierModal && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">Créer un nouvel atelier</h3>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                <Factory className="w-4 h-4 text-blue-600" />
+                <span>Créer un Nouvel Atelier</span>
+              </h3>
+              <button
+                onClick={() => setShowAtelierModal(false)}
+                className="cursor-pointer text-slate-400 hover:text-slate-600 p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
             <form onSubmit={handleCreateAtelier} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Numéro d'atelier</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                  Numéro d'atelier (Identifiant unique)
+                </label>
                 <input
                   type="number"
                   value={nouveauNumAtelier}
                   onChange={(e) => setNouveauNumAtelier(e.target.value)}
                   placeholder="Ex: 30"
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Libellé de l'atelier</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                  Libellé officiel de l'atelier
+                </label>
                 <input
                   type="text"
                   value={nouveauLibelleAtelier}
                   onChange={(e) => setNouveauLibelleAtelier(e.target.value)}
-                  placeholder="Ex: Atelier Peinture & Conditionnement"
+                  placeholder="Ex: Atelier Peinture & Traitement Thermique"
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition"
                 />
               </div>
-              <div className="flex justify-end space-x-3 pt-3">
+
+              <div className="pt-2 flex justify-end space-x-2.5">
                 <button
                   type="button"
                   onClick={() => setShowAtelierModal(false)}
-                  className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg"
+                  className="cursor-pointer px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold"
+                  className="cursor-pointer px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs"
                 >
-                  Enregistrer l'Atelier
+                  Valider et enregistrer
                 </button>
               </div>
             </form>
@@ -167,61 +217,83 @@ export default function AteliersView({ data, onAddAtelier, onAddLigne }) {
         </div>
       )}
 
-      {/* Modal Créer Ligne */}
+      {/* Modal Ajouter une Ligne */}
       {showLigneModal && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">Ajouter une ligne de fabrication</h3>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                <Layers className="w-4 h-4 text-slate-800" />
+                <span>Ajouter une Ligne de Fabrication</span>
+              </h3>
+              <button
+                onClick={() => setShowLigneModal(false)}
+                className="cursor-pointer text-slate-400 hover:text-slate-600 p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
             <form onSubmit={handleCreateLigne} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Numéro de ligne</label>
-                <input
-                  type="number"
-                  value={nouveauNumLigne}
-                  onChange={(e) => setNouveauNumLigne(e.target.value)}
-                  placeholder="Ex: 103"
-                  required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Nombre d'opérateurs nécessaires</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={nouveauNbOp}
-                  onChange={(e) => setNouveauNbOp(e.target.value)}
-                  required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Atelier de rattachement</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                  Atelier d'accueil
+                </label>
                 <select
                   value={atelierCibleLigne}
                   onChange={(e) => setAtelierCibleLigne(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition"
                 >
-                  {data.ateliers.map(a => (
+                  {data.ateliers.map((a) => (
                     <option key={a.id} value={a.id}>
-                      Atelier {a.numeroAtelier} - {a.libelle}
+                      Atelier #{a.numeroAtelier} — {a.libelle}
                     </option>
                   ))}
                 </select>
               </div>
-              <div className="flex justify-end space-x-3 pt-3">
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                  Numéro de ligne
+                </label>
+                <input
+                  type="number"
+                  value={nouveauNumLigne}
+                  onChange={(e) => setNouveauNumLigne(e.target.value)}
+                  placeholder="Ex: 104"
+                  required
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                  Effectif d'opérateurs nécessaire (nbOperateursNecessaires)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="50"
+                  value={nouveauNbOp}
+                  onChange={(e) => setNouveauNbOp(e.target.value)}
+                  required
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end space-x-2.5">
                 <button
                   type="button"
                   onClick={() => setShowLigneModal(false)}
-                  className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg"
+                  className="cursor-pointer px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm bg-slate-900 hover:bg-black text-white rounded-lg font-semibold"
+                  className="cursor-pointer px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold shadow-xs"
                 >
-                  Ajouter la Ligne
+                  Affecter la ligne
                 </button>
               </div>
             </form>
@@ -232,4 +304,3 @@ export default function AteliersView({ data, onAddAtelier, onAddLigne }) {
     </div>
   );
 }
-

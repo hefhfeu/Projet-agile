@@ -451,3 +451,4 @@ def generer_pdf(chemin_pdf):
 if __name__ == "__main__":
     chemin_sortie = os.path.join(os.getcwd(), "GUIDE_DE_SOUTENANCE_TWIN3.pdf")
     generer_pdf(chemin_sortie)
+

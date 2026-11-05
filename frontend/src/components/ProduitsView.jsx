@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
+import { Tag, Plus, Search, Layers, Box, CheckCircle2, X, TrendingUp } from 'lucide-react';
 
 export default function ProduitsView({ data, onAddProduit, onUpdateStock }) {
   const [showModal, setShowModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
   const [reference, setReference] = useState('');
   const [designation, setDesignation] = useState('');
   const [prix, setPrix] = useState('');
@@ -23,129 +26,215 @@ export default function ProduitsView({ data, onAddProduit, onUpdateStock }) {
     setShowModal(false);
   };
 
+  const produitsFiltres = data.produits.filter(p =>
+    p.referenceProduit.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.designation.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalValeurStock = data.produits.reduce((acc, p) => acc + (p.prixVenteUnitaire * p.quantiteStock), 0);
+
   return (
     <div className="space-y-6">
       
       {/* En-tête */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-2 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-3 border-b border-slate-200">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-            Module 3 : Catalogue des Produits Finis
-          </h2>
-          <p className="text-sm text-slate-500 mt-1">
-            Référentiel des articles fabriqués, valorisation unitaire et niveaux de stock disponibles.
+          <div className="flex items-center space-x-2">
+            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+              Module 3 : Catalogue des Produits Finis
+            </h2>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-sky-50 text-sky-700 border border-sky-200">
+              CATALOGUE &bull; M3
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">
+            Référentiel des articles fabriqués, prix de vente unitaire HT et valorisation des stocks finis.
           </p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="mt-3 sm:mt-0 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold shadow transition"
-        >
-          + Enregistrer un Produit
-        </button>
-      </div>
 
-      {/* Cartes Produits */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {data.produits.map((prod) => (
-          <div key={prod.id} className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-bold px-2 py-0.5 bg-blue-50 text-blue-700 rounded border border-blue-200">
-                  {prod.referenceProduit}
-                </span>
-                <span className="text-xs text-slate-400">Réf. #{prod.id}</span>
-              </div>
-              <h3 className="text-base font-bold text-slate-900 mt-3 leading-snug">
-                {prod.designation}
-              </h3>
-            </div>
-
-            <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
-              <div>
-                <span className="text-xs text-slate-400 block">Prix unitaire</span>
-                <span className="text-lg font-bold text-slate-900">
-                  {prod.prixVenteUnitaire.toFixed(2)} €
-                </span>
-              </div>
-              <div className="text-right">
-                <span className="text-xs text-slate-400 block">Stock fini</span>
-                <span className={`text-lg font-bold ${prod.quantiteStock < 10 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                  {prod.quantiteStock} unités
-                </span>
-              </div>
-            </div>
-
+        <div className="flex items-center space-x-3">
+          <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono">
+            <span className="text-slate-500">Valeur stock total :</span>
+            <span className="font-bold text-slate-900">{totalValeurStock.toLocaleString('fr-FR')} €</span>
           </div>
-        ))}
+          <button
+            onClick={() => setShowModal(true)}
+            className="cursor-pointer inline-flex items-center gap-1.5 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-semibold shadow-xs hover:shadow-md transition active:scale-[0.98]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Enregistrer un Produit</span>
+          </button>
+        </div>
       </div>
 
-      {/* Modal Création Produit */}
+      {/* Barre de recherche */}
+      <div className="relative">
+        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Rechercher par référence produit (ex: MOT-5KW), désignation..."
+          className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-sky-500 outline-none transition"
+        />
+      </div>
+
+      {/* Grille des Cartes Produits */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {produitsFiltres.length === 0 ? (
+          <div className="col-span-3 py-12 text-center text-xs text-slate-400 bg-white rounded-2xl border border-dashed border-slate-300">
+            Aucun produit ne correspond à votre recherche.
+          </div>
+        ) : (
+          produitsFiltres.map((prod) => {
+            const niveauPourcent = Math.min(100, Math.round((prod.quantiteStock / 80) * 100));
+            return (
+              <div
+                key={prod.id}
+                className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs hover:shadow-md transition flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-extrabold px-2.5 py-1 bg-sky-50 text-sky-800 rounded-lg border border-sky-200">
+                      {prod.referenceProduit}
+                    </span>
+                    <span className="text-[11px] font-mono text-slate-400">ID: #{prod.id}</span>
+                  </div>
+
+                  <h3 className="text-sm font-bold text-slate-900 mt-3 leading-snug">
+                    {prod.designation}
+                  </h3>
+
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-baseline justify-between">
+                    <span className="text-xs text-slate-500 font-medium">Prix Vente Unitaire :</span>
+                    <span className="text-base font-extrabold font-mono text-slate-900">
+                      {parseFloat(prod.prixVenteUnitaire).toFixed(2)} €
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-slate-100">
+                  <div className="flex items-center justify-between text-xs mb-1.5 font-mono">
+                    <span className="text-slate-500 flex items-center gap-1">
+                      <Box className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Stock magasin :</span>
+                    </span>
+                    <span className={`font-bold ${prod.quantiteStock > 15 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                      {prod.quantiteStock} unité(s)
+                    </span>
+                  </div>
+
+                  {/* Barre de progression de stock */}
+                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        prod.quantiteStock > 30
+                          ? 'bg-emerald-500'
+                          : prod.quantiteStock > 15
+                          ? 'bg-amber-500'
+                          : 'bg-rose-500'
+                      }`}
+                      style={{ width: `${niveauPourcent}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Modal Créer Produit */}
       {showModal && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">Enregistrer un nouveau produit fini</h3>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                <Tag className="w-4 h-4 text-sky-600" />
+                <span>Enregistrer un Produit au Catalogue</span>
+              </h3>
+              <button
+                onClick={() => setShowModal(false)}
+                className="cursor-pointer text-slate-400 hover:text-slate-600 p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
             <form onSubmit={handleCreateProduit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Référence Produit</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                  Référence Produit (Code unique)
+                </label>
                 <input
                   type="text"
                   value={reference}
                   onChange={(e) => setReference(e.target.value)}
-                  placeholder="Ex: MOT-10KW-HD"
+                  placeholder="Ex: POMPE-HYDR-200"
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none uppercase font-mono"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono focus:ring-2 focus:ring-sky-500 focus:bg-white outline-none transition uppercase"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Désignation complète</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                  Désignation commerciale
+                </label>
                 <input
                   type="text"
                   value={designation}
                   onChange={(e) => setDesignation(e.target.value)}
-                  placeholder="Ex: Moteur Électrique Haute Puissance 10kW"
+                  placeholder="Ex: Pompe hydraulique haute pression 200 bars"
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-sky-500 focus:bg-white outline-none transition"
                 />
               </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Prix de vente (€)</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                    Prix de Vente HT (€)
+                  </label>
                   <input
                     type="number"
                     step="0.01"
                     min="0"
                     value={prix}
                     onChange={(e) => setPrix(e.target.value)}
-                    placeholder="Ex: 1250.00"
+                    placeholder="Ex: 850.00"
                     required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono focus:ring-2 focus:ring-sky-500 focus:bg-white outline-none transition"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Stock initial</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                    Stock Initial
+                  </label>
                   <input
                     type="number"
                     min="0"
                     value={stock}
                     onChange={(e) => setStock(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono focus:ring-2 focus:ring-sky-500 focus:bg-white outline-none transition"
                   />
                 </div>
               </div>
-              <div className="flex justify-end space-x-3 pt-3">
+
+              <div className="pt-2 flex justify-end space-x-2.5">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg"
+                  className="cursor-pointer px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold"
+                  className="cursor-pointer px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-semibold shadow-xs"
                 >
-                  Enregistrer
+                  Créer le produit
                 </button>
               </div>
             </form>
@@ -156,4 +245,3 @@ export default function ProduitsView({ data, onAddProduit, onUpdateStock }) {
     </div>
   );
 }
-

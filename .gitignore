@@ -30,4 +30,6 @@ htmlcov/
 Thumbs.db
 Desktop.ini
 .DS_Store
+temp_edge/
+
 
