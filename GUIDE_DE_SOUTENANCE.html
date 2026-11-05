@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Guide de Soutenance - Système Gestion Usine TWIN_3</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    @page {
+      size: A4;
+      margin: 14mm 14mm 14mm 14mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #1e293b;
+      background: #ffffff;
+      font-size: 11pt;
+      line-height: 1.5;
+    }
+
+    .page {
+      page-break-after: always;
+      padding-bottom: 10mm;
+    }
+
+    .page:last-child {
+      page-break-after: avoid;
+    }
+
+    /* En-tête officiel */
+    .header-bar {
+      border-bottom: 3px solid #0f172a;
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .header-title h1 {
+      font-size: 20pt;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+    }
+
+    .header-title p {
+      font-size: 10pt;
+      color: #64748b;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .badge-promo {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 9pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    h2 {
+      font-size: 13pt;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 18px;
+      margin-bottom: 10px;
+      padding-bottom: 4px;
+      border-bottom: 1.5px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #334155;
+      margin-top: 12px;
+      margin-bottom: 6px;
+    }
+
+    p {
+      margin-bottom: 8px;
+      color: #334155;
+      font-size: 10pt;
+    }
+
+    /* Cartouche d'alerte / Encadré */
+    .callout {
+      background: #f8fafc;
+      border-left: 4px solid #0284c7;
+      padding: 10px 14px;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0;
+      font-size: 9.5pt;
+      color: #334155;
+    }
+
+    .callout-success {
+      background: #f0fdf4;
+      border-left-color: #16a34a;
+      color: #166534;
+    }
+
+    .callout-warning {
+      background: #fffbeb;
+      border-left-color: #d97706;
+      color: #92400e;
+    }
+
+    /* Tableaux soignés */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 16px 0;
+      font-size: 9pt;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: #0f172a;
+      font-weight: 700;
+      text-align: left;
+      padding: 7px 10px;
+      border: 1px solid #cbd5e1;
+      text-transform: uppercase;
+      font-size: 8pt;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      padding: 7px 10px;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+      vertical-align: top;
+    }
+
+    tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+
+    /* Badges rôles */
+    .role-badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 8pt;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .badge-admin { background: #f3e8ff; color: #6b21a8; border: 1px solid #d8b4fe; }
+    .badge-resp { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+    .badge-collab { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .badge-oper { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+
+    /* Étapes scénario */
+    .step-box {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      background: #ffffff;
+      page-break-inside: avoid;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .step-title {
+      font-weight: 700;
+      font-size: 10pt;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step-num {
+      background: #0284c7;
+      color: #ffffff;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8.5pt;
+      font-weight: 800;
+    }
+
+    .step-time {
+      font-size: 8.5pt;
+      color: #64748b;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .step-body {
+      font-size: 9pt;
+      color: #475569;
+    }
+
+    .step-action {
+      background: #f8fafc;
+      padding: 6px 10px;
+      border-radius: 5px;
+      border: 1px dashed #cbd5e1;
+      margin-top: 6px;
+      font-size: 8.5pt;
+    }
+
+    .code-span {
+      font-family: 'JetBrains Mono', monospace;
+      background: #f1f5f9;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 8.5pt;
+      color: #0f172a;
+    }
+
+    /* Grille 2 colonnes */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px;
+      background: #f8fafc;
+    }
+
+    .card h4 {
+      font-size: 9pt;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      font-size: 8pt;
+      color: #94a3b8;
+      text-align: center;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== PAGE 1 ==================== -->
+  <div class="page">
+    <div class="header-bar">
+      <div class="header-title">
+        <h1>GUIDE DE SOUTENANCE & RECETTE</h1>
+        <p>Système Informatisé de Gestion d'Usine de Production &bull; Architecture 3-Tiers</p>
+      </div>
+      <div>
+        <span class="badge-promo">TWIN_3 &bull; Promo 2026</span>
+      </div>
+    </div>
+
+    <div class="callout callout-success">
+      <strong>Projet Validé & Prêt :</strong> Ce guide présente le scénario chronologique idéal (15 à 20 minutes) pour réussir votre soutenance orale devant le jury, la démonstration des 8 modules, la traçabilité dans PostgreSQL et les réponses aux questions techniques fréquentes.
+    </div>
+
+    <h2>1. Synthèse de l'Architecture & de la Stack Technique</h2>
+    <p>L'application respecte à 100% le <strong>Dossier de Référence UML</strong> fourni et les principes des Méthodes Agiles :</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <h4> Tier Présentation (Frontend)</h4>
+        <p style="font-size: 8.5pt;">
+          &bull; <strong>React 18</strong> + <strong>Vite</strong> + <strong>Tailwind CSS</strong>.<br>
+          &bull; 8 composants modulaires métier étanches.<br>
+          &bull; Écran de connexion conforme au cas UML <em>«include» S'authentifier</em>.<br>
+          &bull; Menu réactif adaptatif selon les habilitations RBAC.
+        </p>
+      </div>
+      <div class="card">
+        <h4>⚙️ Tier Métier & Données (Backend)</h4>
+        <p style="font-size: 8.5pt;">
+          &bull; <strong>Django 5 & Django REST Framework</strong> (Python 3.12).<br>
+          &bull; <strong>PostgreSQL 17</strong> (17 tables UML, intégrité référentielle).<br>
+          &bull; Tokens sécurisés <strong>JWT</strong> (SimpleJWT) & hachage PBKDF2.<br>
+          &bull; 8 tests unitaires automatisés validés à 100%.
+        </p>
+      </div>
+    </div>
+
+    <h2>2. Matrice des 4 Acteurs et Comptes de Démonstration</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Rôle Métier (RBAC)</th>
+          <th>Identifiant</th>
+          <th>Mot de passe</th>
+          <th>Périmètre Opérationnel & Droits Accordés</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="role-badge badge-admin">ADMINISTRATEUR</span></td>
+          <td><span class="code-span">admin</span></td>
+          <td><span class="code-span">admin123</span></td>
+          <td>Supervision globale, gestion des comptes utilisateurs, back-office Django Admin.</td>
+        </tr>
+        <tr>
+          <td><span class="role-badge badge-resp">RESPONSABLE ATELIERS</span></td>
+          <td><span class="code-span">resp_atelier</span></td>
+          <td><span class="code-span">resp123</span></td>
+          <td>Création ateliers & lignes, catalogue produits finis, lancement et suivi des lots de fabrication.</td>
+        </tr>
+        <tr>
+          <td><span class="role-badge badge-collab">COLLABORATEUR RESP.</span></td>
+          <td><span class="code-span">collab_resp</span></td>
+          <td><span class="code-span">collab123</span></td>
+          <td>Gestion des équipes d'ouvriers, affectation opérateurs, déclaration d'incidents avec temps d'arrêt.</td>
+        </tr>
+        <tr>
+          <td><span class="role-badge badge-oper">OPÉRATEUR / STOCKS</span></td>
+          <td><span class="code-span">operateur1</span></td>
+          <td><span class="code-span">oper123</span></td>
+          <td>Machines, saisie maintenance avec décrémentation atomique des pièces, nomenclature récursive (BOM).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>3. Lancement Simplifié en 1 Clic Avant la Soutenance</h2>
+    <p>Pour démarrer immédiatement les deux serveurs devant le jury :</p>
+    <div class="callout">
+      👉 <strong>Double-cliquez sur le fichier :</strong> <span class="code-span">demarrer_projet.bat</span><br>
+      Deux fenêtres s'ouvrent : le backend Django (<span class="code-span">http://localhost:8000</span>) et le frontend React (<span class="code-span">http://localhost:5173</span>).<br>
+      <em>(En cas d'absence imprévue de serveur ou de coupure réseau, double-cliquez directement sur <span class="code-span">standalone_demo.html</span> pour une démonstration instantanée).</em>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 2 ==================== -->
+  <div class="page">
+    <div class="header-bar">
+      <div class="header-title">
+        <h1>SCÉNARIO DE DÉMONSTRATION PAS-À-PAS</h1>
+        <p>Déroulé Chronologique Idéal pour Impressionner le Jury (15 Minutes)</p>
+      </div>
+      <div>
+        <span class="badge-promo">TWIN_3 &bull; Scénario Oral</span>
+      </div>
+    </div>
+
+    <!-- Étape 1 -->
+    <div class="step-box">
+      <div class="step-header">
+        <div class="step-title">
+          <span class="step-num">1</span>
+          <span>Connexion Sécurisée & Contrôle d'Accès RBAC</span>
+        </div>
+        <span class="step-time">⏱️ 0:00 - 2:00</span>
+      </div>
+      <div class="step-body">
+        <strong>Ce que vous dites :</strong> <em>« Conformément au cas d'utilisation UML obligatoire «include» S'authentifier, aucun utilisateur ne peut accéder à l'usine sans session active. Chaque acteur possède des droits strictement cloisonnés. »</em>
+        <div class="step-action">
+          👉 <strong>Action :</strong> Sur <span class="code-span">http://localhost:5173</span>, montrez l'écran de Login. Cliquez sur l'accès rapide <strong>Administrateur</strong> (<span class="code-span">admin / admin123</span>). Montrez le tableau de bord global avec les indicateurs en temps réel (nombre de lignes, machines, temps d'arrêt cumulé, alertes stock).
+        </div>
+      </div>
+    </div>
+
+    <!-- Étape 2 -->
+    <div class="step-box">
+      <div class="step-header">
+        <div class="step-title">
+          <span class="step-num">2</span>
+          <span>Ateliers, Lignes & Lots de Fabrication (Modules 1 & 2)</span>
+        </div>
+        <span class="step-time">⏱️ 2:00 - 5:00</span>
+      </div>
+      <div class="step-body">
+        <strong>Ce que vous dites :</strong> <em>« Je me connecte maintenant en Responsable d'Ateliers. Cet acteur pilote les capacités de production et lance les ordres de fabrication. »</em>
+        <div class="step-action">
+          👉 <strong>Action :</strong> Déconnectez-vous ou connectez-vous avec <span class="code-span">resp_atelier</span>. Allez dans <strong>Ateliers & Lignes</strong>, cliquez sur <em>+ Créer un Atelier</em> (ex: Atelier Usinage Lourd #3 avec 4 opérateurs). Allez ensuite dans <strong>Lots de Production</strong> et montrez la traçabilité : chaque lot référence son produit, sa date et les <strong>matricules des ouvriers affectés</strong>.
+        </div>
+      </div>
+    </div>
+
+    <!-- Étape 3 -->
+    <div class="step-box">
+      <div class="step-header">
+        <div class="step-title">
+          <span class="step-num">3</span>
+          <span>Équipes d'Ouvriers & Incidents avec Temps d'Arrêt (Modules 4 & 7)</span>
+        </div>
+        <span class="step-time">⏱️ 5:00 - 8:00</span>
+      </div>
+      <div class="step-body">
+        <strong>Ce que vous dites :</strong> <em>« Le Collaborateur Responsable supervise les ressources humaines et qualifie les aléas de production. »</em>
+        <div class="step-action">
+          👉 <strong>Action :</strong> Connectez-vous avec <span class="code-span">collab_resp</span>. Allez dans <strong>Équipes & Opérateurs</strong> : montrez l'affectation matricule/équipe. Puis ouvrez <strong>Incidents de Production</strong> et cliquez sur <em>+ Déclarer un Incident</em> : sélectionnez le Lot #1001, choisissez une panne mécanique et saisissez <strong>45 minutes de temps d'arrêt</strong>. Montrez que le temps d'arrêt machine s'accumule immédiatement !
+        </div>
+      </div>
+    </div>
+
+    <!-- Étape 4 -->
+    <div class="step-box">
+      <div class="step-header">
+        <div class="step-title">
+          <span class="step-num">4</span>
+          <span>Maintenance & Décrémentation Atomique de Stock (Module 5)</span>
+        </div>
+        <span class="step-time">⏱️ 8:00 - 11:00</span>
+      </div>
+      <div class="step-body">
+        <strong>Ce que vous dites (POINT CLÉ) :</strong> <em>« Voici l'un des points algorithmiques critiques du projet : la consommation de pièces lors d'une maintenance décrémente le stock de façon atomique et concurrente dans PostgreSQL. »</em>
+        <div class="step-action">
+          👉 <strong>Action :</strong> Connectez-vous en <span class="code-span">operateur1</span>. Notez le stock actuel de la pièce <em>Roulement SKF 6205</em> (ex: 120 unités). Cliquez sur <em>+ Déclarer une Maintenance</em> : choisissez la machine ROBOT-ASS-03, consommez <strong>2 roulements</strong>, durée 1h30. Validez : montrez que le stock passe instantanément à <strong>118 unités</strong> !
+        </div>
+      </div>
+    </div>
+
+    <!-- Étape 5 -->
+    <div class="step-box">
+      <div class="step-header">
+        <div class="step-title">
+          <span class="step-num">5</span>
+          <span>Nomenclature Récursive (BOM) & Algorithme Anti-Cycle (Module 6)</span>
+        </div>
+        <span class="step-time">⏱️ 11:00 - 14:00</span>
+      </div>
+      <div class="step-body">
+        <strong>Ce que vous dites :</strong> <em>« Une pièce peut être composée d'autres sous-pièces sur plusieurs niveaux hiérarchiques. Notre backend intègre un algorithme de détection de cycle en profondeur (DFS) pour interdire toute boucle récursive infinie. »</em>
+        <div class="step-action">
+          👉 <strong>Action :</strong> Ouvrez l'onglet <strong>Stock & Nomenclature</strong>. Montrez l'arbre récursif du <em>Rotor 5kW</em> composé d'un arbre Ø40mm, de roulements et de joints toriques. Ajustez le multiplicateur de quantité pour montrer le calcul dynamique des besoins.
+        </div>
+      </div>
+    </div>
+
+    <!-- Étape 6 -->
+    <div class="step-box">
+      <div class="step-header">
+        <div class="step-title">
+          <span class="step-num">6</span>
+          <span>Preuve PostgreSQL & Validation par les Tests Unitaires</span>
+        </div>
+        <span class="step-time">⏱️ 14:00 - 15:00</span>
+      </div>
+      <div class="step-body">
+        <strong>Ce que vous dites :</strong> <em>« Enfin, toutes ces opérations sont directement persistées dans PostgreSQL et garanties par notre banc de tests automatisés. »</em>
+        <div class="step-action">
+          👉 <strong>Action :</strong> Basculez sur <strong>pgAdmin 4</strong> pour montrer la table <span class="code-span">stock_achats_piece</span> avec la valeur 118 décrémentée. Montrez le terminal avec <span class="code-span">python manage.py test</span> (8/8 tests OK).
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 3 ==================== -->
+  <div class="page">
+    <div class="header-bar">
+      <div class="header-title">
+        <h1>QUESTIONS PIÈGES DU JURY & ARGUMENTAIRES</h1>
+        <p>Réponses Techniques Maîtrisées pour Obtenir la Note Maximale</p>
+      </div>
+      <div>
+        <span class="badge-promo">TWIN_3 &bull; FAQ Technique</span>
+      </div>
+    </div>
+
+    <h2>1. Les Questions Classiques d'Architecture Logicielle</h2>
+
+    <div class="callout">
+      <strong>Question 1 : Pourquoi avoir choisi Django REST Framework et PostgreSQL plutôt qu'une solution NoSQL ou PHP ?</strong><br>
+      <em>Réponse :</em> Le modèle industriel d'une usine repose sur une <strong>forte cohérence relationnelle</strong> (17 entités hautement interconnectées : un incident doit appartenir à un lot précis, une maintenance est liée à une machine unique). PostgreSQL offre une gestion stricte des contraintes d'intégrité, des clés étrangères et des verrous de concurrence. Django REST Framework fournit un ORM puissant, un système de permissions RBAC natif et un back-office d'administration qui accélère la maintenance opérationnelle.
+    </div>
+
+    <div class="callout">
+      <strong>Question 2 : Comment garantissez-vous qu'un stock ne devienne jamais négatif lors d'interventions simultanées ?</strong><br>
+      <em>Réponse :</em> Dans l'application <span class="code-span">maintenance</span>, l'enregistrement d'une consommation est enveloppé dans un bloc transactionnel atomique <span class="code-span">@transaction.atomic</span>. Nous utilisons la directive SQL <span class="code-span">select_for_update()</span> qui verrouille la ligne de la pièce dans PostgreSQL jusqu'à la fin de la transaction. Avant de décrémenter, nous validons : <br>
+      <span class="code-span">if piece.quantiteStock &lt; quantiteConsommee: raise ValidationError("Stock insuffisant")</span>.<br>
+      Cela empêche tout accès concurrent incohérent (Race Condition).
+    </div>
+
+    <div class="callout">
+      <strong>Question 3 : Comment fonctionne l'algorithme de détection de cycle dans la nomenclature ?</strong><br>
+      <em>Réponse :</em> Dans <span class="code-span">apps/stock_achats/services.py</span>, nous modélisons la nomenclature sous forme de <strong>Graphe Orienté Acyclique (DAG)</strong>. Avant d'insérer un lien <span class="code-span">Parente &rarr; Composante</span>, nous lançons un <strong>parcours en profondeur (DFS)</strong> à partir de la pièce composante. Si la pièce parente fait déjà partie de la descendance de la pièce composante, un cycle récursif infini se formerait : l'algorithme intercepte l'anomalie et rejette immédiatement l'opération avec une exception métier claire.
+    </div>
+
+    <div class="callout">
+      <strong>Question 4 : Comment le Frontend React communique-t-il avec l'API Django ?</strong><br>
+      <em>Réponse :</em> Le frontend utilise une architecture <strong>Single Page Application (SPA)</strong> asynchrone. L'authentification repose sur des jetons <strong>JWT (JSON Web Token)</strong>. Lors du login, le backend délivre un <span class="code-span">access_token</span> (courte durée) et un <span class="code-span">refresh_token</span>. Chaque requête HTTP ultérieure injecte automatiquement l'en-tête standard <span class="code-span">Authorization: Bearer &lt;token&gt;</span>. Si le token expire, notre client JavaScript tente un renouvellement transparent sans déconnecter l'opérateur.
+    </div>
+
+    <h2>2. Synthèse des Commandes Utiles pendant la Présentation</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Objectif</th>
+          <th>Commande Terminal (PowerShell / CMD)</th>
+          <th>Résultat Attendu</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Lancer toute l'application</td>
+          <td><span class="code-span">demarrer_projet.bat</span></td>
+          <td>Ouvre 2 terminaux : API Django sur :8000 et React sur :5173.</td>
+        </tr>
+        <tr>
+          <td>Exécuter les tests unitaires</td>
+          <td><span class="code-span">cd backend; .\venv\Scripts\python.exe manage.py test</span></td>
+          <td><span class="code-span">Ran 8 tests in 9.4s &bull; OK</span> (Tests 100% validés).</td>
+        </tr>
+        <tr>
+          <td>Accès Back-Office Admin</td>
+          <td>URL : <span class="code-span">http://localhost:8000/admin/</span></td>
+          <td>Gestion directe de toutes les tables PostgreSQL.</td>
+        </tr>
+        <tr>
+          <td>Vérifier l'historique Git</td>
+          <td><span class="code-span">git log --oneline</span></td>
+          <td>Affiche les commits de sauvegarde officiels du projet.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="footer">
+      Système de Gestion d'Usine de Production &bull; Projet TWIN_3 &bull; Dossier de Soutenance Officiel &bull; Promo 2026
+    </div>
+  </div>
+
+</body>
+</html>
+
