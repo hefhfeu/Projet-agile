@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Système de Gestion d'Usine de Production — TWIN_3 Industrial SaaS</title>
+
+  <!-- Tailwind CSS CDN avec configuration industrielle sur-mesure -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            },
+            surface: {
+              950: '#090d16',
+              900: '#0f172a',
+              850: '#141e33',
+              800: '#1e293b',
+              700: '#334155',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React 18 & Babel Standalone -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Polices Google : Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #090d16;
+      color: #f1f5f9;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Effets de verres translucides (Glassmorphism industriel) */
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(51, 65, 85, 0.5);
+    }
+
+    .glass-card {
+      background: rgba(20, 30, 51, 0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(51, 65, 85, 0.6);
+    }
+
+    .glass-card:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    /* Scrollbars soignées */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #090d16;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white antialiased">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+    // --- ICÔNES SVG INLINE VECTORIELLES HAUTE DÉFINITION (Lucide Style) ---
+    const Icons = {
+      Factory: (props) => (
+        <svg className={props.className || "w-5 h-5"} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2 20h20M6 20V10l6 4V4l8 6v10H6z" />
+        </svg>
+      ),
+      Layers: (props) => (
+        <svg className={props.className || "w-5 h-5"} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+          <path strokeLinecap="round" strokeLinejoin="round" d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="m2 12 8.58 3.91a2 2 0 0 0 1.66 0L21 12" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="m2 17 8.58 3.91a2 2 0 0 0 1.66 0L21 17" />
+        </svg>
+      ),
+      Box: (props) => (
+        <svg className={props.className || "w-5 h-5"} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="m3.3 7 8.7 5 8.7-5M12 22V12" />
+        </svg>
+      ),
+      Tag: (props) => (
+        <svg className={props.className || "w-5 h-5"} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 2H2v10l9.29 9.29a2 2 0 0 0 2.83 0l6.59-6.59a2 2 0 0 0 0-2.83Z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01" />
+        </svg>
+      ),
+      Users: (props) => (
+        <svg className={props.className || "w-5 h-5"} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M22 21v-2a4 4 0 0 0-3-3.87" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      ),
+      Wrench: (props) => (
+        <svg className={props.className || "w-5 h-5"} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+        </svg>
+      ),
+      AlertTriangle: (props) => (
+        <svg className={props.className || "w-5 h-5"} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+          <path strokeLinecap="round" strokeLinejoin="round" d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+      ),
+      Cpu: (props) => (
+        <svg className={props.className || "w-5 h-5"} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+          <rect x="4" y="4" width="16" height="16" rx="2" />
+          <rect x="9" y="9" width="6" height="6" />
+          <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3" />
+        </svg>
+      ),
+      Clock: (props) => (
+        <svg className={props.className || "w-5 h-5"} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+      ),
+      Plus: (props) => (
+        <svg className={props.className || "w-4 h-4"} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+      ),
+      Check: (props) => (
+        <svg className={props.className || "w-4 h-4"} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ),
+      Activity: (props) => (
+        <svg className={props.className || "w-5 h-5"} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
+      ),
+      LogOut: (props) => (
+        <svg className={props.className || "w-4 h-4"} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+        </svg>
+      ),
+      Lock: (props) => (
+        <svg className={props.className || "w-4 h-4"} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0110 0v4" />
+        </svg>
+      ),
+      User: (props) => (
+        <svg className={props.className || "w-4 h-4"} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      )
+    };
+
+    // --- JEU DE DONNÉES INDUSTRIELLES CONFORME AU DOSSIER ---
+    const INITIAL_DATA = {
+      users: [
+        { id: 1, username: 'admin', role: 'ADMINISTRATEUR', role_libelle: 'Administrateur', nom: 'Admin', prenom: 'Système' },
+        { id: 2, username: 'resp_atelier', role: 'RESPONSABLE_ATELIER', role_libelle: 'Resp. Ateliers', nom: 'Martin', prenom: 'Michel' },
+        { id: 3, username: 'collab_resp', role: 'COLLABORATEUR_RESPONSABLE', role_libelle: 'Collab. Resp.', nom: 'Dupont', prenom: 'Jean' },
+        { id: 4, username: 'operateur1', role: 'OPERATEUR', role_libelle: 'Opérateur / Stocks', nom: 'Bernard', prenom: 'Thomas' },
+      ],
+      ateliers: [
+        {
+          id: 1, numeroAtelier: 10, libelle: "Atelier Usinage & Assemblage Mécanique", responsable_nom: "Michel Martin",
+          lignes: [
+            { id: 1, numeroLigne: 101, nbOperateursNecessaires: 4, machines_count: 2, statut: "EN_COURS", lot_actuel: "Lot #1001", produit_nom: "Moteur 5kW", progress: 68 },
+            { id: 2, numeroLigne: 102, nbOperateursNecessaires: 3, machines_count: 1, statut: "MAINTENANCE", lot_actuel: "Lot #1002", produit_nom: "Réducteur R20", progress: 32 }
+          ]
+        },
+        {
+          id: 2, numeroAtelier: 20, libelle: "Atelier Traitement Thermique & Finition", responsable_nom: "Michel Martin",
+          lignes: [
+            { id: 3, numeroLigne: 201, nbOperateursNecessaires: 2, machines_count: 2, statut: "EN_COURS", lot_actuel: "Lot #1003", produit_nom: "Pompe 70B", progress: 85 }
+          ]
+        }
+      ],
+      machines: [
+        { id: 1, referenceMachine: "FRAIS-CNC-01", etat: "OPERATIONNELLE", ligne_id: 1, numero_ligne: 101, type: "Fraiseuse 5 axes numérique" },
+        { id: 2, referenceMachine: "TOUR-NUM-02", etat: "OPERATIONNELLE", ligne_id: 1, numero_ligne: 101, type: "Tour parallèle robotisé" },
+        { id: 3, referenceMachine: "ROBOT-ASS-03", etat: "EN_MAINTENANCE", ligne_id: 2, numero_ligne: 102, type: "Cellule d'assemblage automatique" },
+        { id: 4, referenceMachine: "FOUR-THERM-01", etat: "OPERATIONNELLE", ligne_id: 3, numero_ligne: 201, type: "Four sous atmosphère contrôlée" },
+      ],
+      equipes: [
+        { id: 1, numeroEquipe: 1, libelle: "Équipe Alpha (Matin)", responsable_nom: "Jean Dupont" },
+        { id: 2, numeroEquipe: 2, libelle: "Équipe Beta (Après-midi)", responsable_nom: "Jean Dupont" },
+      ],
+      operateurs: [
+        { id: 1, matricule: "OP-001", nom: "Bernard", prenom: "Thomas", dateEntree: "2022-03-01", equipe_id: 1, equipe_libelle: "Équipe Alpha" },
+        { id: 2, matricule: "OP-002", nom: "Leroy", prenom: "Sophie", dateEntree: "2023-01-15", equipe_id: 1, equipe_libelle: "Équipe Alpha" },
+        { id: 3, matricule: "OP-003", nom: "Moreau", prenom: "Lucas", dateEntree: "2024-06-01", equipe_id: 1, equipe_libelle: "Équipe Alpha" },
+        { id: 4, matricule: "OP-004", nom: "Dubois", prenom: "Camille", dateEntree: "2021-09-10", equipe_id: 2, equipe_libelle: "Équipe Beta" },
+      ],
+      produits: [
+        { id: 1, referenceProduit: "MOT-5KW-IND", designation: "Moteur Électrique Triphasé 5kW Industriel", prixVenteUnitaire: 850.00, quantiteStock: 24 },
+        { id: 2, referenceProduit: "RED-R20-TORQ", designation: "Réducteur de Vitesse à Engrenages R20", prixVenteUnitaire: 420.50, quantiteStock: 15 },
+        { id: 3, referenceProduit: "POMP-HYD-70B", designation: "Pompe Hydraulique Haute Pression 70 Bars", prixVenteUnitaire: 1290.00, quantiteStock: 6 },
+      ],
+      lots: [
+        {
+          id: 1, idLot: 1001, dateProduction: "2026-11-01", ligne_numero: 101,
+          produit_ref: "MOT-5KW-IND", produit_nom: "Moteur Électrique 5kW",
+          operateurs: ["OP-001 (Thomas Bernard)", "OP-002 (Sophie Leroy)"], nb_incidents: 1, statut: "Actif"
+        },
+        {
+          id: 2, idLot: 1002, dateProduction: "2026-11-02", ligne_numero: 102,
+          produit_ref: "RED-R20-TORQ", produit_nom: "Réducteur R20",
+          operateurs: ["OP-003 (Lucas Moreau)"], nb_incidents: 0, statut: "Arrêt maintenance"
+        }
+      ],
+      typesIncidents: [
+        { id: 1, codeType: "INC-MECA", libelle: "Défaillance mécanique / Grippage" },
+        { id: 2, codeType: "INC-ELEC", libelle: "Surtension ou coupure électrique" },
+        { id: 3, codeType: "INC-QUAL", libelle: "Défaut matière première hors tolérance" },
+      ],
+      incidents: [
+        { id: 1, numeroIncident: 501, idLot: 1001, produit_ref: "MOT-5KW-IND", type_libelle: "Défaillance mécanique / Grippage", tempsArret: "00:45:00", temps_minutes: 45 }
+      ],
+      pieces: [
+        { id: 1, referencePiece: "PIECE-SKF-6205", libelle: "Roulement à billes SKF 6205-2RS", prixUnitaireHT: 14.50, quantiteStock: 120, seuil_alerte: 30 },
+        { id: 2, referencePiece: "PIECE-JOINT-V50", libelle: "Joint torique Viton 50mm haute temp.", prixUnitaireHT: 3.20, quantiteStock: 300, seuil_alerte: 50 },
+        { id: 3, referencePiece: "PIECE-ARBRE-AX40", libelle: "Arbre de transmission usiné Ø40mm", prixUnitaireHT: 88.00, quantiteStock: 18, seuil_alerte: 20 },
+        { id: 4, referencePiece: "ENS-ROTOR-5KW", libelle: "Sous-ensemble Rotor équilibré 5kW", prixUnitaireHT: 180.00, quantiteStock: 8, seuil_alerte: 10 },
+      ],
+      nomenclatures: [
+        { id: 1, parent_ref: "ENS-ROTOR-5KW", composant_ref: "PIECE-ARBRE-AX40", quantite: 1, composant_nom: "Arbre de transmission Ø40mm", dispo: 18 },
+        { id: 2, parent_ref: "ENS-ROTOR-5KW", composant_ref: "PIECE-SKF-6205", quantite: 2, composant_nom: "Roulement à billes SKF 6205", dispo: 120 },
+        { id: 3, parent_ref: "ENS-ROTOR-5KW", composant_ref: "PIECE-JOINT-V50", quantite: 2, composant_nom: "Joint torique Viton 50mm", dispo: 300 },
+      ],
+      fournisseurs: [
+        { id: 1, codeFournisseur: "FOURN-SKF", raisonSociale: "SKF Roulements France", adresse: "69007 Lyon", telephone: "+33 4 78 00 11 22" },
+        { id: 2, codeFournisseur: "FOURN-SEAL", raisonSociale: "SealTech Joints Industriels", adresse: "92000 Nanterre", telephone: "+33 1 45 88 99 00" },
+      ],
+      achats: [
+        { id: 1, dateAchat: "2026-01-10", piece_ref: "PIECE-SKF-6205", fournisseur_nom: "SKF Roulements", prixAchat: 13.80 },
+        { id: 2, dateAchat: "2026-02-01", piece_ref: "PIECE-JOINT-V50", fournisseur_nom: "SealTech Joints", prixAchat: 2.95 },
+      ],
+      maintenances: [
+        {
+          id: 1, machine_ref: "ROBOT-ASS-03", ligne_numero: 102, dateDebut: "2026-11-03",
+          heureDebut: "09:30", duree: "01:30:00", operateurs: ["OP-001 (Thomas Bernard)"],
+          consommations: [{ piece_ref: "PIECE-SKF-6205", quantite: 2, libelle: "Roulement à billes SKF" }]
+        }
+      ]
+    };
+
+    function App() {
+      const [data, setData] = useState(INITIAL_DATA);
+      const [currentUser, setCurrentUser] = useState(INITIAL_DATA.users[0]); // Par défaut Administrateur
+      const [activeTab, setActiveTab] = useState('dashboard');
+      const [toast, setToast] = useState(null);
+      const [slideOver, setSlideOver] = useState(null); // 'maintenance', 'incident', 'lot'
+
+      // Filtre de calcul BOM interactif
+      const [bomMultiplier, setBomMultiplier] = useState(1);
+
+      // État formulaire tactile maintenance
+      const [maintMachine, setMaintMachine] = useState(data.machines[2]?.referenceMachine || "ROBOT-ASS-03");
+      const [maintPiece, setMaintPiece] = useState(data.pieces[0]?.referencePiece || "PIECE-SKF-6205");
+      const [maintQte, setMaintQte] = useState(1);
+      const [maintOp, setMaintOp] = useState(data.operateurs[0]?.matricule || "OP-001");
+      const [maintDuree, setMaintDuree] = useState(60);
+
+      // Notification toast
+      const notify = (title, desc, type = 'success') => {
+        setToast({ title, desc, type });
+        setTimeout(() => setToast(null), 4000);
+      };
+
+      // Règle critique : Décrémentation atomique lors de la maintenance
+      const handleExecuteMaintenance = (e) => {
+        e.preventDefault();
+        const piece = data.pieces.find(p => p.referencePiece === maintPiece);
+        if (piece && piece.quantiteStock < maintQte) {
+          notify("Stock Insuffisant", `Seulement ${piece.quantiteStock} pièces disponibles pour ${maintPiece}.`, "error");
+          return;
+        }
+
+        const opObj = data.operateurs.find(o => o.matricule === maintOp);
+        const machObj = data.machines.find(m => m.referenceMachine === maintMachine);
+
+        setData(prev => ({
+          ...prev,
+          pieces: prev.pieces.map(p => p.referencePiece === maintPiece ? { ...p, quantiteStock: p.quantiteStock - maintQte } : p),
+          maintenances: [{
+            id: Date.now(),
+            machine_ref: maintMachine,
+            ligne_numero: machObj ? machObj.numero_ligne : 101,
+            dateDebut: new Date().toISOString().split('T')[0],
+            heureDebut: new Date().toTimeString().split(' ')[0].substring(0, 5),
+            duree: `0${Math.floor(maintDuree / 60)}:${(maintDuree % 60).toString().padStart(2, '0')}:00`,
+            operateurs: [opObj ? `${opObj.matricule} (${opObj.prenom} ${opObj.nom})` : maintOp],
+            consommations: [{ piece_ref: maintPiece, quantite: maintQte, libelle: piece ? piece.libelle : maintPiece }]
+          }, ...prev.maintenances]
+        }));
+
+        setSlideOver(null);
+        notify("Maintenance Validée", `Stock de ${maintPiece} réduit de ${maintQte} unités.`);
+      };
+
+      // Règle critique : Déclaration Incident avec relevé obligatoire du temps d'arrêt
+      const handleCreateIncident = (e) => {
+        e.preventDefault();
+        const numInc = parseInt(e.target.num.value, 10);
+        const idLot = parseInt(e.target.lot.value, 10);
+        const tpsMin = parseInt(e.target.tps.value, 10);
+        const typeLib = e.target.type.value;
+
+        setData(prev => ({
+          ...prev,
+          incidents: [{
+            id: Date.now(),
+            numeroIncident: numInc,
+            idLot: idLot,
+            produit_ref: "LOT-" + idLot,
+            type_libelle: typeLib,
+            tempsArret: `00:${tpsMin.toString().padStart(2, '0')}:00`,
+            temps_minutes: tpsMin
+          }, ...prev.incidents],
+          lots: prev.lots.map(l => l.idLot === idLot ? { ...l, nb_incidents: (l.nb_incidents || 0) + 1 } : l)
+        }));
+
+        setSlideOver(null);
+        notify("Incident Enregistré", `Arrêt de ${tpsMin} min consigné sur le Lot #${idLot}.`, "warning");
+      };
+
+      // Création d'atelier et ligne
+      const handleCreateAtelier = (e) => {
+        e.preventDefault();
+        const num = parseInt(e.target.num.value, 10);
+        const lib = e.target.lib.value.trim();
+        const numLigne = parseInt(e.target.ligne.value, 10);
+        const nbOp = parseInt(e.target.nbop.value, 10);
+
+        const newAtelier = {
+          id: Date.now(),
+          numeroAtelier: num,
+          libelle: lib,
+          responsable_nom: "Michel Martin",
+          lignes: [
+            { id: Date.now() + 1, numeroLigne: numLigne, nbOperateursNecessaires: nbOp, machines_count: 1, statut: "EN_COURS", lot_actuel: "En attente", produit_nom: "Planifié", progress: 0 }
+          ]
+        };
+
+        setData(prev => ({
+          ...prev,
+          ateliers: [...prev.ateliers, newAtelier]
+        }));
+        setSlideOver(null);
+        notify("Atelier Créé", `Atelier #${num} et Ligne #${numLigne} configurés.`);
+      };
+
+      // Lancement d'un nouveau lot de production
+      const handleCreateLot = (e) => {
+        e.preventDefault();
+        const numLot = parseInt(e.target.num.value, 10);
+        const ligneNum = parseInt(e.target.ligne.value, 10);
+        const prodRef = e.target.prod.value;
+        const prodObj = data.produits.find(p => p.referenceProduit === prodRef);
+
+        const newLot = {
+          id: Date.now(),
+          idLot: numLot,
+          dateProduction: new Date().toISOString().split('T')[0],
+          ligne_numero: ligneNum,
+          produit_ref: prodRef,
+          produit_nom: prodObj ? prodObj.designation : prodRef,
+          operateurs: ["OP-001 (Thomas Bernard)", "OP-002 (Sophie Leroy)"],
+          nb_incidents: 0,
+          statut: "Actif"
+        };
+
+        setData(prev => ({
+          ...prev,
+          lots: [newLot, ...prev.lots]
+        }));
+        setSlideOver(null);
+        notify("Lot Lancé", `Lot #${numLot} démarré sur la Ligne ${ligneNum}.`);
+      };
+
+      // Création produit fini
+      const handleCreateProduit = (e) => {
+        e.preventDefault();
+        const ref = e.target.ref.value.trim().toUpperCase();
+        const nom = e.target.nom.value.trim();
+        const prix = parseFloat(e.target.prix.value);
+        const stock = parseInt(e.target.stock.value, 10);
+
+        setData(prev => ({
+          ...prev,
+          produits: [...prev.produits, {
+            id: Date.now(),
+            referenceProduit: ref,
+            designation: nom,
+            prixVenteUnitaire: prix,
+            quantiteStock: stock
+          }]
+        }));
+        setSlideOver(null);
+        notify("Produit Enregistré", `${ref} ajouté au catalogue.`);
+      };
+
+      // Création opérateur
+      const handleCreateOperateur = (e) => {
+        e.preventDefault();
+        const mat = e.target.mat.value.trim().toUpperCase();
+        const nom = e.target.nom.value.trim();
+        const prenom = e.target.prenom.value.trim();
+        const eqId = parseInt(e.target.eq.value, 10);
+        const eqObj = data.equipes.find(eq => eq.id === eqId);
+
+        setData(prev => ({
+          ...prev,
+          operateurs: [...prev.operateurs, {
+            id: Date.now(),
+            matricule: mat,
+            nom: nom,
+            prenom: prenom,
+            dateEntree: new Date().toISOString().split('T')[0],
+            equipe_id: eqId,
+            equipe_libelle: eqObj ? eqObj.libelle : "Équipe"
+          }]
+        }));
+        setSlideOver(null);
+        notify("Opérateur Enregistré", `${mat} (${prenom} ${nom}) affecté à l'équipe.`);
+      };
+
+      // Filtrage d'affichage selon le rôle (RBAC)
+      const isRespAtelier = currentUser?.role === 'RESPONSABLE_ATELIER' || currentUser?.role === 'ADMINISTRATEUR';
+      const isCollabResp = currentUser?.role === 'COLLABORATEUR_RESPONSABLE' || currentUser?.role === 'ADMINISTRATEUR';
+      const isOperateur = currentUser?.role === 'OPERATEUR' || currentUser?.role === 'ADMINISTRATEUR';
+
+      // SI NON CONNECTÉ : ÉCRAN D'AUTHENTIFICATION OBLIGATOIRE (Cas «include» S'authentifier)
+      if (!currentUser) {
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-slate-950 via-surface-900 to-slate-950 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+            {toast && (
+              <div className="fixed bottom-6 right-6 z-50 glass-card border border-slate-700/80 p-4 rounded-xl shadow-2xl flex items-center space-x-3 animate-in fade-in">
+                <span>{toast.type === 'warning' ? '⚠️' : '✓'}</span>
+                <div>
+                  <div className="text-xs font-bold text-white">{toast.title}</div>
+                  <div className="text-[11px] text-slate-400">{toast.desc}</div>
+                </div>
+              </div>
+            )}
+            <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 mb-4 shadow-xl shadow-indigo-950/50">
+                <Icons.Factory className="w-8 h-8" />
+              </div>
+              <h2 className="text-3xl font-extrabold text-white tracking-tight">Usine de Production</h2>
+              <p className="mt-2 text-sm text-slate-400">Système Intégré de Supervision Industrielle (TWIN_3)</p>
+              <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono bg-surface-900 border border-slate-800 text-slate-300">
+                🔒 Conformité UML : Cas «include» S'authentifier & RBAC
+              </div>
+            </div>
+
+            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+              <div className="glass-panel py-8 px-6 shadow-2xl rounded-2xl sm:px-10 border border-slate-800">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const ident = e.target.ident.value.trim().toLowerCase();
+                    const found = data.users.find(u => u.username.toLowerCase() === ident);
+                    if (found) {
+                      setCurrentUser(found);
+                      notify("Authentifié", `Bienvenue ${found.prenom} ${found.nom}`);
+                    } else {
+                      notify("Erreur d'accès", "Identifiant invalide.", "warning");
+                    }
+                  }}
+                  className="space-y-4"
+                >
+                  <div>
+                    <label className="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-1.5">Identifiant</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                        <Icons.User className="w-4 h-4" />
+                      </div>
+                      <input
+                        name="ident"
+                        defaultValue="admin"
+                        required
+                        placeholder="Ex: admin, resp_atelier..."
+                        className="w-full h-11 pl-10 pr-3 bg-surface-850 border border-slate-700 rounded-xl text-sm text-white font-mono outline-none focus:border-indigo-500 transition"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-1.5">Mot de passe</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                        <Icons.Lock className="w-4 h-4" />
+                      </div>
+                      <input
+                        name="pwd"
+                        type="password"
+                        defaultValue="admin123"
+                        required
+                        placeholder="••••••••"
+                        className="w-full h-11 pl-10 pr-3 bg-surface-850 border border-slate-700 rounded-xl text-sm text-white font-mono outline-none focus:border-indigo-500 transition"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-3 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-600/30 transition transform active:scale-95"
+                  >
+                    Ouvrir ma Session de Travail
+                  </button>
+                </form>
+
+                <div className="mt-8 pt-6 border-t border-slate-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[11px] font-mono uppercase text-slate-400 font-semibold">Accès Rapides par Rôle :</span>
+                    <span className="text-[10px] text-indigo-400">1 Clic pour tester</span>
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      { u: 'admin', p: 'admin123', label: 'Administrateur', badge: 'bg-purple-600' },
+                      { u: 'resp_atelier', p: 'resp123', label: 'Resp. Ateliers', badge: 'bg-blue-600' },
+                      { u: 'collab_resp', p: 'collab123', label: 'Collab. Responsable', badge: 'bg-emerald-600' },
+                      { u: 'operateur1', p: 'oper123', label: 'Opérateur / Stocks', badge: 'bg-amber-600' },
+                    ].map(acc => {
+                      const userObj = data.users.find(u => u.username === acc.u);
+                      return (
+                        <button
+                          key={acc.u}
+                          type="button"
+                          onClick={() => {
+                            if (userObj) {
+                              setCurrentUser(userObj);
+                              notify("Connexion Réussie", `Connecté en tant que ${acc.label}`);
+                            }
+                          }}
+                          className="w-full p-2.5 rounded-xl border border-slate-800 bg-surface-850/80 hover:bg-slate-800/80 transition flex items-center justify-between text-left group"
+                        >
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded text-white ${acc.badge}`}>{acc.label}</span>
+                              <span className="text-xs font-mono text-slate-400">{acc.u} / {acc.p}</span>
+                            </div>
+                          </div>
+                          <span className="text-xs text-indigo-400 opacity-0 group-hover:opacity-100 transition">→</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      const totalArretMinutes = useMemo(() => {
+        return data.incidents.reduce((acc, inc) => acc + (inc.temps_minutes || 0), 0);
+      }, [data.incidents]);
+
+      return (
+        <div className="min-h-screen flex flex-col bg-surface-950 text-slate-100 font-sans">
+
+          {/* HEADER HIGH-TECH SAAS */}
+          <header className="glass-panel sticky top-0 z-40 border-b border-slate-800/80 px-6 py-3.5 flex items-center justify-between shadow-2xl">
+            <div className="flex items-center space-x-3.5">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25">
+                <Icons.Factory className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <h1 className="font-extrabold text-base tracking-tight text-white">TWIN_3</h1>
+                  <span className="text-[10px] font-mono font-bold bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 px-1.5 py-0.5 rounded">
+                    INDUSTRIE 4.0
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400">Système Intégré de Pilotage d'Usine</p>
+              </div>
+            </div>
+
+            {/* SÉLECTEUR RAPIDE DE RÔLE (RBAC SWITCHER) */}
+            <div className="flex items-center space-x-4">
+              <div className="hidden lg:flex items-center space-x-1.5 bg-surface-900/90 border border-slate-800 p-1 rounded-xl text-xs">
+                <span className="text-slate-400 text-[11px] font-medium px-2">Simuler Profil :</span>
+                {data.users.map(u => {
+                  const isActive = currentUser.id === u.id;
+                  return (
+                    <button
+                      key={u.id}
+                      onClick={() => {
+                        setCurrentUser(u);
+                        const allowed = {
+                          ADMINISTRATEUR: ['dashboard', 'synoptique', 'lots', 'produits', 'equipes', 'maintenance', 'bom', 'incidents'],
+                          RESPONSABLE_ATELIER: ['dashboard', 'synoptique', 'lots', 'produits'],
+                          COLLABORATEUR_RESPONSABLE: ['dashboard', 'equipes', 'incidents'],
+                          OPERATEUR: ['dashboard', 'maintenance', 'bom'],
+                        };
+                        if (allowed[u.role] && !allowed[u.role].includes(activeTab)) {
+                          setActiveTab('dashboard');
+                        }
+                        notify("Changement de rôle", `Connecté en tant que ${u.prenom} ${u.nom} (${u.role_libelle})`, "info");
+                      }}
+                      className={`px-3 py-1.5 rounded-lg font-medium transition-all duration-200 ${isActive
+                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30 font-semibold'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                        }`}
+                    >
+                      {u.prenom} <span className="opacity-60 text-[10px]">({u.role.substring(0, 5)})</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* BADGE UTILISATEUR CONNECTÉ & DÉCONNEXION */}
+              <div className="flex items-center space-x-3 border-l border-slate-800 pl-4">
+                <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-indigo-400">
+                  {currentUser.prenom[0]}{currentUser.nom[0]}
+                </div>
+                <div className="text-right hidden sm:block">
+                  <div className="text-xs font-bold text-white">{currentUser.prenom} {currentUser.nom}</div>
+                  <div className="text-[10px] text-indigo-400 font-mono font-medium">{currentUser.role_libelle}</div>
+                </div>
+                <button
+                  onClick={() => { setCurrentUser(null); notify("Déconnexion", "Session fermée.", "info"); }}
+                  title="Se déconnecter"
+                  className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800/80 rounded-lg transition"
+                >
+                  <Icons.LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </header>
+
+          <div className="flex flex-1 overflow-hidden">
+
+            {/* SIDEBAR NAVIGATION MODERNE */}
+            <aside className="w-64 glass-panel border-r border-slate-800/70 p-4 shrink-0 flex flex-col justify-between">
+              <div className="space-y-6">
+
+                <div>
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-semibold px-3 mb-2">
+                    Supervision & Métier
+                  </div>
+                  <nav className="space-y-1">
+                    {[
+                      { id: 'dashboard', label: 'Vue d\'Ensemble', icon: Icons.Activity, badge: 'Live', show: true },
+                      { id: 'synoptique', label: 'Synoptique Lignes', icon: Icons.Layers, badge: 'M1 & M2', show: isRespAtelier },
+                      { id: 'lots', label: 'Traçabilité des Lots', icon: Icons.Box, badge: 'M2', show: isRespAtelier },
+                      { id: 'produits', label: 'Catalogue Produits', icon: Icons.Tag, badge: 'M3', show: isRespAtelier },
+                      { id: 'equipes', label: 'Équipes & Ouvriers', icon: Icons.Users, badge: 'M4', show: isCollabResp },
+                      { id: 'maintenance', label: 'Machines & Maint.', icon: Icons.Wrench, badge: 'M5', show: isOperateur },
+                      { id: 'bom', label: 'Nomenclature (BOM)', icon: Icons.Cpu, badge: 'M6', show: isOperateur },
+                      { id: 'incidents', label: 'Incidents & Arrêts', icon: Icons.AlertTriangle, badge: 'M7', show: isCollabResp },
+                    ].filter(i => i.show).map(item => {
+                      const isActive = activeTab === item.id;
+                      const IconComponent = item.icon;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => setActiveTab(item.id)}
+                          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${isActive
+                              ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/25'
+                              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                            }`}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <IconComponent className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                            <span>{item.label}</span>
+                          </div>
+                          <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-bold ${isActive ? 'bg-indigo-900/60 text-indigo-200' : 'bg-slate-800 text-slate-400'
+                            }`}>
+                            {item.badge}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </nav>
+                </div>
+
+                {/* BOUTON D'ACTION FAST-INPUT SELON LE RÔLE */}
+                <div className="pt-2">
+                  {currentUser.role === 'OPERATEUR' && (
+                    <button
+                      onClick={() => setSlideOver('maintenance')}
+                      className="w-full flex items-center justify-center space-x-2 py-3 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-amber-500/20 transition transform active:scale-95"
+                    >
+                      <Icons.Wrench className="w-4 h-4 text-slate-950" />
+                      <span>Déclarer Maintenance</span>
+                    </button>
+                  )}
+                  {currentUser.role === 'COLLABORATEUR_RESPONSABLE' && (
+                    <button
+                      onClick={() => setSlideOver('incident')}
+                      className="w-full flex items-center justify-center space-x-2 py-3 px-4 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-rose-500/20 transition transform active:scale-95"
+                    >
+                      <Icons.AlertTriangle className="w-4 h-4 text-white" />
+                      <span>Déclarer un Incident</span>
+                    </button>
+                  )}
+                  {currentUser.role === 'RESPONSABLE_ATELIER' && (
+                    <button
+                      onClick={() => setSlideOver('lot')}
+                      className="w-full flex items-center justify-center space-x-2 py-3 px-4 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-500/20 transition transform active:scale-95"
+                    >
+                      <Icons.Box className="w-4 h-4 text-white" />
+                      <span>Lancer un Nouveau Lot</span>
+                    </button>
+                  )}
+                  {currentUser.role === 'ADMINISTRATEUR' && (
+                    <button
+                      onClick={() => setSlideOver('maintenance')}
+                      className="w-full flex items-center justify-center space-x-2 py-3 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-purple-600/25 transition transform active:scale-95"
+                    >
+                      <Icons.Cpu className="w-4 h-4 text-white" />
+                      <span>Action Super-Admin</span>
+                    </button>
+                  )}
+                </div>
+
+              </div>
+
+              {/* FOOTER STATUT SYSTEME */}
+              <div className="pt-4 border-t border-slate-800/80 text-[11px] text-slate-400">
+                <div className="flex items-center space-x-2">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                  </span>
+                  <span className="font-medium text-slate-300">17 Classes UML Persistées</span>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1 font-mono">Décrémentation atomique OK</p>
+              </div>
+            </aside>
+
+            {/* CONTENU PRINCIPAL DES VUES */}
+            <main className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6">
+
+              {/* VUE 1 : TABLEAU DE BORD SUPERVISION */}
+              {activeTab === 'dashboard' && (
+                <div className="space-y-6">
+
+                  {/* CARTE D'AUTHENTIFICATION & RESPECT DU RÔLE RBAC */}
+                  <div className={`p-4 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                    currentUser.role === 'ADMINISTRATEUR' ? 'bg-purple-950/40 border-purple-800/60' :
+                    currentUser.role === 'RESPONSABLE_ATELIER' ? 'bg-indigo-950/40 border-indigo-800/60' :
+                    currentUser.role === 'COLLABORATEUR_RESPONSABLE' ? 'bg-emerald-950/40 border-emerald-800/60' :
+                    'bg-amber-950/40 border-amber-800/60'
+                  }`}>
+                    <div className="flex items-center space-x-3.5">
+                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold text-lg ${
+                        currentUser.role === 'ADMINISTRATEUR' ? 'bg-purple-600 text-white' :
+                        currentUser.role === 'RESPONSABLE_ATELIER' ? 'bg-indigo-600 text-white' :
+                        currentUser.role === 'COLLABORATEUR_RESPONSABLE' ? 'bg-emerald-600 text-white' :
+                        'bg-amber-500 text-slate-950'
+                      }`}>
+                        {currentUser.role === 'ADMINISTRATEUR' ? '👑' :
+                         currentUser.role === 'RESPONSABLE_ATELIER' ? '🏭' :
+                         currentUser.role === 'COLLABORATEUR_RESPONSABLE' ? '👥' : '🔧'}
+                      </div>
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-extrabold text-sm text-white">{currentUser.prenom} {currentUser.nom}</span>
+                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                            currentUser.role === 'ADMINISTRATEUR' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' :
+                            currentUser.role === 'RESPONSABLE_ATELIER' ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' :
+                            currentUser.role === 'COLLABORATEUR_RESPONSABLE' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' :
+                            'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                          }`}>
+                            {currentUser.role_libelle}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-300 mt-1">
+                          {currentUser.role === 'RESPONSABLE_ATELIER' && "🎯 Vos droits : Pilotage Ateliers & Lignes (M1), Catalogue Produits (M3), Lancement des Lots (M2)."}
+                          {currentUser.role === 'COLLABORATEUR_RESPONSABLE' && "🎯 Vos droits : Constitution des Équipes & Ouvriers (M4), Déclaration des Incidents & Temps d'Arrêt (M7)."}
+                          {currentUser.role === 'OPERATEUR' && "🎯 Vos droits : Déclaration de Maintenance machine (M5), Décrémentation Stock pièces (M5), Nomenclatures BOM (M6)."}
+                          {currentUser.role === 'ADMINISTRATEUR' && "🎯 Vos droits : Contrôle absolu sur les 17 classes UML, gestion des comptes et administration globale."}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0 text-xs font-mono">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                      <span className="text-slate-300 font-medium">Contrôle d'accès actif</span>
+                    </div>
+                  </div>
+
+                  {/* CARTOUCHES KPI DYNAMIQUES */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                    {/* KPI 1 : Ateliers & Lignes */}
+                    <div className="glass-card p-5 rounded-2xl relative overflow-hidden group">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">Usine & Lignes</span>
+                        <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                          <Icons.Factory className="w-4 h-4" />
+                        </div>
+                      </div>
+                      <div className="mt-4 flex items-baseline space-x-2">
+                        <span className="text-3xl font-extrabold font-mono text-white tracking-tight">{data.ateliers.length}</span>
+                        <span className="text-xs text-slate-400">ateliers &bull; {data.ateliers.reduce((a, b) => a + b.lignes.length, 0)} lignes</span>
+                      </div>
+                      <div className="mt-3 flex items-center space-x-1.5 text-xs text-emerald-400">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        <span className="font-medium">100% connectées au réseau d'atelier</span>
+                      </div>
+                    </div>
+
+                    {/* KPI 2 : Lots en cours */}
+                    <div className="glass-card p-5 rounded-2xl relative overflow-hidden group">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">Lots Tracés</span>
+                        <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+                          <Icons.Box className="w-4 h-4" />
+                        </div>
+                      </div>
+                      <div className="mt-4 flex items-baseline space-x-2">
+                        <span className="text-3xl font-extrabold font-mono text-cyan-400 tracking-tight">{data.lots.length}</span>
+                        <span className="text-xs text-slate-400">lots actifs en fabrication</span>
+                      </div>
+                      <div className="mt-3 text-xs text-slate-400 font-mono">
+                        Affectation nominative par matricule
+                      </div>
+                    </div>
+
+                    {/* KPI 3 : Temps d'arrêt & Incidents */}
+                    <div className="glass-card p-5 rounded-2xl relative overflow-hidden group">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">Temps d'Arrêt Total</span>
+                        <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+                          <Icons.AlertTriangle className="w-4 h-4" />
+                        </div>
+                      </div>
+                      <div className="mt-4 flex items-baseline space-x-2">
+                        <span className="text-3xl font-extrabold font-mono text-rose-400 tracking-tight">{totalArretMinutes} min</span>
+                        <span className="text-xs text-slate-400">({data.incidents.length} incidents)</span>
+                      </div>
+                      <div className="mt-3 flex items-center space-x-1 text-xs text-rose-400 font-medium">
+                        <span>Relevé précis consigné sur chaque lot</span>
+                      </div>
+                    </div>
+
+                    {/* KPI 4 : Pièces & Maintenance */}
+                    <div className="glass-card p-5 rounded-2xl relative overflow-hidden group">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">Parc Machines</span>
+                        <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                          <Icons.Wrench className="w-4 h-4" />
+                        </div>
+                      </div>
+                      <div className="mt-4 flex items-baseline space-x-2">
+                        <span className="text-3xl font-extrabold font-mono text-amber-400 tracking-tight">
+                          {data.machines.filter(m => m.etat === 'EN_MAINTENANCE').length}
+                        </span>
+                        <span className="text-xs text-slate-400">en maintenance sur {data.machines.length}</span>
+                      </div>
+                      <div className="mt-3 text-xs text-slate-400">
+                        Décrémentation atomique des consommables
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* SYNOPTIQUE RÉSUMÉ & ALERTE STOCKS */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    {/* Vue d'ensemble des Lignes d'Atelier */}
+                    <div className="lg:col-span-2 glass-panel rounded-2xl p-6 border border-slate-800">
+                      <div className="flex items-center justify-between mb-5">
+                        <div>
+                          <h3 className="font-bold text-white text-base">État en Direct des Lignes de Fabrication</h3>
+                          <p className="text-xs text-slate-400 mt-0.5">Surveillance en temps réel par atelier</p>
+                        </div>
+                        <button
+                          onClick={() => setActiveTab('synoptique')}
+                          className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition"
+                        >
+                          Synoptique complet &rarr;
+                        </button>
+                      </div>
+
+                      <div className="space-y-3.5">
+                        {data.ateliers.map(atelier => (
+                          <div key={atelier.id} className="p-4 rounded-xl bg-surface-900/60 border border-slate-800/80">
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="font-bold text-sm text-slate-200">
+                                Atelier {atelier.numeroAtelier} — {atelier.libelle}
+                              </span>
+                              <span className="text-xs text-slate-400 font-mono">Resp: {atelier.responsable_nom}</span>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {atelier.lignes.map(ligne => (
+                                <div key={ligne.id} className="p-3 bg-surface-850 rounded-xl border border-slate-700/60 space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-mono text-xs font-bold text-indigo-400">Ligne #{ligne.numeroLigne}</span>
+                                    <span className={`inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${ligne.statut === 'EN_COURS'
+                                        ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                                        : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                                      }`}>
+                                      <span className={`w-1.5 h-1.5 rounded-full ${ligne.statut === 'EN_COURS' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`}></span>
+                                      <span>{ligne.statut}</span>
+                                    </span>
+                                  </div>
+                                  <div className="text-xs text-slate-300 font-medium">
+                                    {ligne.lot_actuel} &bull; <span className="text-slate-400">{ligne.produit_nom}</span>
+                                  </div>
+                                  {/* Barre de progression */}
+                                  <div>
+                                    <div className="flex justify-between text-[10px] text-slate-400 font-mono mb-1">
+                                      <span>Progression</span>
+                                      <span>{ligne.progress}%</span>
+                                    </div>
+                                    <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                      <div
+                                        className={`h-full rounded-full transition-all duration-500 ${ligne.statut === 'EN_COURS' ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                                        style={{ width: `${ligne.progress}%` }}
+                                      ></div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Stock Alertes & Nomenclatures */}
+                    <div className="glass-panel rounded-2xl p-6 border border-slate-800 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="font-bold text-white text-base">Alertes Pièces Critiques</h3>
+                          <span className="text-[10px] font-mono font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                            Contrôle Stock
+                          </span>
+                        </div>
+
+                        <div className="space-y-3">
+                          {data.pieces.map(piece => {
+                            const isLow = piece.quantiteStock <= piece.seuil_alerte;
+                            return (
+                              <div key={piece.id} className="p-3 bg-surface-900/80 border border-slate-800 rounded-xl flex items-center justify-between">
+                                <div>
+                                  <div className="font-mono text-xs font-bold text-slate-200">{piece.referencePiece}</div>
+                                  <div className="text-[11px] text-slate-400 truncate max-w-[160px]">{piece.libelle}</div>
+                                </div>
+                                <div className="text-right">
+                                  <div className={`text-sm font-mono font-bold ${isLow ? 'text-amber-400' : 'text-emerald-400'}`}>
+                                    {piece.quantiteStock}
+                                  </div>
+                                  <div className="text-[9px] text-slate-400 font-mono">seuil: {piece.seuil_alerte}</div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="mt-5 p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-300">
+                        💡 <strong>Intégrité garantie :</strong> Chaque maintenance décrémente automatiquement le stock et empêche toute rupture.
+                      </div>
+                    </div>
+
+                  </div>
+
+                </div>
+              )}
+
+              {/* VUE 2 : SYNOPTIQUE DÉTAILLÉ DES LIGNES (MODULE 1 & 2) */}
+              {activeTab === 'synoptique' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                    <div>
+                      <h2 className="text-2xl font-extrabold text-white tracking-tight">Synoptique Industriel des Lignes</h2>
+                      <p className="text-xs text-slate-400 mt-1">Supervision graphique des ateliers, lignes de fabrication et affectation des effectifs.</p>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={() => setSlideOver('atelier')}
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/30 transition"
+                      >
+                        + Nouvel Atelier
+                      </button>
+                      <button
+                        onClick={() => setSlideOver('incident')}
+                        className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-rose-600/30 transition"
+                      >
+                        + Déclarer Arrêt de Ligne
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {data.ateliers.map(atelier => (
+                      <div key={atelier.id} className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
+                        <div className="flex items-start justify-between border-b border-slate-800/80 pb-3">
+                          <div>
+                            <span className="font-mono text-xs font-bold text-indigo-400 uppercase tracking-wider">Atelier #{atelier.numeroAtelier}</span>
+                            <h3 className="text-lg font-bold text-white mt-0.5">{atelier.libelle}</h3>
+                            <p className="text-xs text-slate-400">Responsable : <strong className="text-slate-200">{atelier.responsable_nom}</strong></p>
+                          </div>
+                          <span className="px-3 py-1 bg-surface-900 text-indigo-300 font-mono text-xs rounded-full border border-indigo-500/30">
+                            {atelier.lignes.length} Lignes
+                          </span>
+                        </div>
+
+                        <div className="space-y-3">
+                          {atelier.lignes.map(ligne => (
+                            <div key={ligne.id} className="p-4 rounded-xl bg-surface-900 border border-slate-800/90 space-y-3 hover:border-indigo-500/40 transition">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-mono font-bold text-xs border border-indigo-500/30">
+                                    L{ligne.numeroLigne}
+                                  </div>
+                                  <div>
+                                    <div className="font-bold text-sm text-white">Ligne {ligne.numeroLigne}</div>
+                                    <div className="text-xs text-slate-400">
+                                      Effectif : <span className="font-mono font-semibold text-emerald-400">{ligne.nbOperateursNecessaires} opérateurs requis</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <span className={`px-2.5 py-1 rounded-full text-xs font-bold font-mono ${ligne.statut === 'EN_COURS'
+                                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                                    : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                                  }`}>
+                                  {ligne.statut}
+                                </span>
+                              </div>
+
+                              <div className="p-2.5 bg-surface-850 rounded-lg text-xs space-y-1">
+                                <div className="flex justify-between text-slate-300">
+                                  <span>Fabrication en cours :</span>
+                                  <strong className="text-white font-mono">{ligne.lot_actuel} ({ligne.produit_nom})</strong>
+                                </div>
+                                <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-2">
+                                  <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${ligne.progress}%` }}></div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* VUE 3 : NOMENCLATURE INTERACTIVE (BOM VISUALIZER) */}
+              {activeTab === 'bom' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                    <div>
+                      <h2 className="text-2xl font-extrabold text-white tracking-tight">Nomenclature Multi-Niveaux (BOM)</h2>
+                      <p className="text-xs text-slate-400 mt-1">Explosion récursive des composants avec calcul des besoins et disponibilité des stocks.</p>
+                    </div>
+
+                    {/* Simulateur de lots à fabriquer */}
+                    <div className="flex items-center space-x-2 bg-surface-900 border border-slate-800 px-3 py-1.5 rounded-xl">
+                      <span className="text-xs text-slate-400">Simuler fabrication :</span>
+                      <button
+                        onClick={() => setBomMultiplier(Math.max(1, bomMultiplier - 1))}
+                        className="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-white rounded font-mono font-bold flex items-center justify-center text-xs"
+                      >-</button>
+                      <span className="font-mono font-bold text-indigo-400 px-2 text-sm">{bomMultiplier} lot(s)</span>
+                      <button
+                        onClick={() => setBomMultiplier(bomMultiplier + 1)}
+                        className="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-white rounded font-mono font-bold flex items-center justify-center text-xs"
+                      >+</button>
+                    </div>
+                  </div>
+
+                  {/* ARBORESCENCE INTERACTIVE BOM */}
+                  <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
+                    <div className="p-4 bg-surface-900 border border-indigo-500/30 rounded-xl shadow-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-2xl">📦</span>
+                          <div>
+                            <span className="font-mono text-xs font-bold px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded border border-indigo-500/30">
+                              ENS-ROTOR-5KW
+                            </span>
+                            <h3 className="text-base font-bold text-white mt-1">Sous-ensemble Rotor Équilibré 5kW</h3>
+                          </div>
+                        </div>
+                        <span className="text-xs text-slate-400 font-mono">
+                          Stock assemblage : <strong className="text-emerald-400">{data.pieces[3].quantiteStock} unités</strong>
+                        </span>
+                      </div>
+
+                      {/* BRANCHES ENFANTS CONNECTÉES */}
+                      <div className="mt-5 pl-6 border-l-2 border-indigo-500/40 space-y-3 font-mono">
+                        {data.nomenclatures.map(n => {
+                          const besoinTotal = n.quantite * bomMultiplier;
+                          const pieceLiee = data.pieces.find(p => p.referencePiece === n.composant_ref);
+                          const stockActuel = pieceLiee ? pieceLiee.quantiteStock : 0;
+                          const isSuffisant = stockActuel >= besoinTotal;
+
+                          return (
+                            <div key={n.id} className="p-3.5 bg-surface-850 rounded-xl border border-slate-800 flex items-center justify-between font-sans">
+                              <div className="flex items-center space-x-3">
+                                <span className="font-mono font-bold text-indigo-400 text-sm">
+                                  × {n.quantite}
+                                </span>
+                                <div>
+                                  <div className="flex items-center space-x-2">
+                                    <span className="font-mono text-xs font-bold text-slate-200">{n.composant_ref}</span>
+                                    <span className="text-xs text-slate-400">— {n.composant_nom}</span>
+                                  </div>
+                                  <div className="text-[11px] text-slate-400 mt-0.5">
+                                    Besoin simulé : <strong className="text-indigo-300 font-mono">{besoinTotal} pièces</strong>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="text-right">
+                                <span className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-bold ${isSuffisant
+                                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                                    : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                                  }`}>
+                                  <span>{stockActuel} en stock</span>
+                                  <span>{isSuffisant ? '✓ OK' : '⚠️ RUPTURE'}</span>
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* VUE 4 : MACHINES & MAINTENANCE */}
+              {activeTab === 'maintenance' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                    <div>
+                      <h2 className="text-2xl font-extrabold text-white tracking-tight">Machines & Maintenance Préventive</h2>
+                      <p className="text-xs text-slate-400 mt-1">Interventions, opérateurs qualifiés et décrémentation automatique des pièces de rechange.</p>
+                    </div>
+                    <button
+                      onClick={() => setSlideOver('maintenance')}
+                      className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-bold shadow-lg shadow-amber-500/25 transition"
+                    >
+                      + Déclarer Intervention
+                    </button>
+                  </div>
+
+                  {/* CARTES DU PARC MACHINES */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {data.machines.map(m => (
+                      <div key={m.id} className="glass-card p-5 rounded-2xl border border-slate-800 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-xs font-bold text-indigo-400">{m.referenceMachine}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${m.etat === 'OPERATIONNELLE'
+                              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                              : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                            }`}>
+                            {m.etat}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="font-bold text-sm text-slate-200">{m.type}</div>
+                          <div className="text-xs text-slate-400 font-mono mt-0.5">Rattachée à la Ligne {m.numero_ligne}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* HISTORIQUE DES INTERVENTIONS */}
+                  <div className="glass-panel rounded-2xl border border-slate-800 overflow-hidden">
+                    <div className="p-4 border-b border-slate-800 font-bold text-sm text-white">
+                      Dernières Maintenances Réalisées
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs text-slate-300">
+                        <thead className="bg-surface-900 uppercase text-[10px] text-slate-400 font-mono border-b border-slate-800">
+                          <tr>
+                            <th className="p-3.5">Machine</th>
+                            <th className="p-3.5">Date & Heure</th>
+                            <th className="p-3.5">Durée</th>
+                            <th className="p-3.5">Technicien(s)</th>
+                            <th className="p-3.5">Consommation Décrémentée</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/80">
+                          {data.maintenances.map(m => (
+                            <tr key={m.id} className="hover:bg-slate-800/30">
+                              <td className="p-3.5 font-bold font-mono text-white">{m.machine_ref}</td>
+                              <td className="p-3.5 font-mono text-slate-400">{m.dateDebut} à {m.heureDebut}</td>
+                              <td className="p-3.5 font-mono font-semibold text-amber-400">{m.duree}</td>
+                              <td className="p-3.5">{m.operateurs.join(', ')}</td>
+                              <td className="p-3.5">
+                                {m.consommations.map((c, i) => (
+                                  <span key={i} className="inline-block px-2 py-0.5 bg-rose-500/15 text-rose-400 border border-rose-500/30 rounded font-mono font-bold mr-1">
+                                    -{c.quantite}x {c.piece_ref}
+                                  </span>
+                                ))}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* VUE 5 : INCIDENTS & TEMPS D'ARRÊT */}
+              {activeTab === 'incidents' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                    <div>
+                      <h2 className="text-2xl font-extrabold text-white tracking-tight">Incidents de Production & Arrêts</h2>
+                      <p className="text-xs text-slate-400 mt-1">Traçabilité stricte : chaque incident impacte un seul lot et mesure le temps d'arrêt machine.</p>
+                    </div>
+                    <button
+                      onClick={() => setSlideOver('incident')}
+                      className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-rose-600/25 transition"
+                    >
+                      + Déclarer un Incident
+                    </button>
+                  </div>
+
+                  <div className="glass-panel rounded-2xl border border-slate-800 overflow-hidden">
+                    <table className="w-full text-left text-xs text-slate-300">
+                      <thead className="bg-surface-900 uppercase text-[10px] text-slate-400 font-mono border-b border-slate-800">
+                        <tr>
+                          <th className="p-3.5">N° Incident</th>
+                          <th className="p-3.5">Lot Concerné</th>
+                          <th className="p-3.5">Typologie</th>
+                          <th className="p-3.5">Temps d'Arrêt</th>
+                          <th className="p-3.5">Statut</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/80">
+                        {data.incidents.map(inc => (
+                          <tr key={inc.id} className="hover:bg-slate-800/30">
+                            <td className="p-3.5 font-bold font-mono text-white">#{inc.numeroIncident}</td>
+                            <td className="p-3.5 font-mono text-indigo-400 font-bold">Lot #{inc.idLot}</td>
+                            <td className="p-3.5">
+                              <span className="px-2 py-0.5 rounded text-[11px] bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                                {inc.type_libelle}
+                              </span>
+                            </td>
+                            <td className="p-3.5 font-mono font-bold text-rose-400">
+                              ⏱️ {inc.tempsArret} ({inc.temps_minutes} min)
+                            </td>
+                            <td className="p-3.5">
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">
+                                Consigné en base
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* VUES LOTS, PRODUITS, EQUIPES */}
+              {activeTab === 'lots' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                    <div>
+                      <h2 className="text-2xl font-extrabold text-white">Lots de Fabrication & Traçabilité Nominative</h2>
+                      <p className="text-xs text-slate-400 mt-1">Traçabilité complète des ouvriers affectés par leur matricule sur chaque lot.</p>
+                    </div>
+                    <button
+                      onClick={() => setSlideOver('lot')}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/30 transition"
+                    >
+                      + Lancer un Lot
+                    </button>
+                  </div>
+                  <div className="glass-panel rounded-2xl border border-slate-800 overflow-hidden">
+                    <table className="w-full text-left text-xs text-slate-300">
+                      <thead className="bg-surface-900 uppercase text-[10px] text-slate-400 font-mono border-b border-slate-800">
+                        <tr>
+                          <th className="p-3.5">Identifiant Lot</th>
+                          <th className="p-3.5">Date</th>
+                          <th className="p-3.5">Ligne</th>
+                          <th className="p-3.5">Produit Fabriqué</th>
+                          <th className="p-3.5">Ouvriers Affectés (Matricules)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/80">
+                        {data.lots.map(l => (
+                          <tr key={l.id} className="hover:bg-slate-800/30">
+                            <td className="p-3.5 font-mono font-bold text-indigo-400">#{l.idLot}</td>
+                            <td className="p-3.5 font-mono text-slate-400">{l.dateProduction}</td>
+                            <td className="p-3.5 font-bold">Ligne {l.ligne_numero}</td>
+                            <td className="p-3.5 font-semibold text-white">{l.produit_nom}</td>
+                            <td className="p-3.5 font-mono text-slate-300">{l.operateurs.join(', ')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'produits' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                    <div>
+                      <h2 className="text-2xl font-extrabold text-white">Catalogue des Produits Finis</h2>
+                      <p className="text-xs text-slate-400 mt-1">Articles manufacturés, prix unitaire et stocks de produits finis disponibles.</p>
+                    </div>
+                    <button
+                      onClick={() => setSlideOver('produit')}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/30 transition"
+                    >
+                      + Nouveau Produit
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {data.produits.map(p => (
+                      <div key={p.id} className="glass-card p-5 rounded-2xl border border-slate-800 space-y-4">
+                        <span className="font-mono text-xs font-bold text-indigo-400 px-2 py-0.5 bg-indigo-500/10 rounded border border-indigo-500/20">
+                          {p.referenceProduit}
+                        </span>
+                        <h4 className="font-bold text-base text-white">{p.designation}</h4>
+                        <div className="flex justify-between items-center pt-2 border-t border-slate-800 text-xs font-mono">
+                          <span className="text-slate-400">Prix unitaire</span>
+                          <span className="text-emerald-400 font-bold text-sm">{p.prixVenteUnitaire.toFixed(2)} €</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'equipes' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                    <div>
+                      <h2 className="text-2xl font-extrabold text-white">Équipes & Opérateurs</h2>
+                      <p className="text-xs text-slate-400 mt-1">Affectation unique des ouvriers par équipe sous la supervision d'un collaborateur responsable.</p>
+                    </div>
+                    <button
+                      onClick={() => setSlideOver('operateur')}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/30 transition"
+                    >
+                      + Ajouter Opérateur
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {data.equipes.map(eq => (
+                      <div key={eq.id} className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
+                        <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                          <div>
+                            <span className="font-mono text-xs font-bold text-emerald-400">Équipe #{eq.numeroEquipe}</span>
+                            <h3 className="font-bold text-white text-base">{eq.libelle}</h3>
+                            <div className="text-xs text-slate-400">Responsable : {eq.responsable_nom}</div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          {data.operateurs.filter(o => o.equipe_id === eq.id).map(op => (
+                            <div key={op.matricule} className="p-3 bg-surface-900 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                              <span className="font-mono font-bold text-indigo-400">{op.matricule}</span>
+                              <span className="text-slate-200 font-medium">{op.prenom} {op.nom}</span>
+                              <span className="text-slate-400 font-mono text-[10px]">Entrée: {op.dateEntree}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            </main>
+          </div>
+
+          {/* TIROIR LATÉRAL COULISSANT (SLIDE-OVER / FAST-INPUT TACTILE TABLETTE) */}
+          {slideOver && (
+            <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/70 backdrop-blur-sm flex justify-end">
+              <div className="w-full max-w-md bg-surface-900 border-l border-slate-800 p-6 flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-300">
+
+                <div>
+                  <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+                    <h3 className="text-lg font-bold text-white flex items-center space-x-2">
+                      <span>
+                        {slideOver === 'maintenance' ? '🔧' :
+                          slideOver === 'incident' ? '⚠️' :
+                            slideOver === 'atelier' ? '🏭' :
+                              slideOver === 'lot' ? '📦' :
+                                slideOver === 'produit' ? '🏷️' : '👤'}
+                      </span>
+                      <span>
+                        {slideOver === 'maintenance' ? 'Saisie Tactile Maintenance' :
+                          slideOver === 'incident' ? 'Déclaration Incident & Arrêt' :
+                            slideOver === 'atelier' ? 'Créer un Atelier & Ligne' :
+                              slideOver === 'lot' ? 'Lancer un Nouveau Lot' :
+                                slideOver === 'produit' ? 'Enregistrer un Produit' : 'Ajouter un Opérateur'}
+                      </span>
+                    </h3>
+                    <button
+                      onClick={() => setSlideOver(null)}
+                      className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+                    >✕</button>
+                  </div>
+
+                  {slideOver === 'maintenance' && (
+                    <form onSubmit={handleExecuteMaintenance} className="space-y-5">
+
+                      {/* Choix Machine (Gros boutons tactiles) */}
+                      <div>
+                        <label className="block text-xs font-mono text-slate-400 mb-1.5">Machine ciblée</label>
+                        <select
+                          value={maintMachine}
+                          onChange={e => setMaintMachine(e.target.value)}
+                          className="w-full h-12 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white font-mono outline-none focus:border-indigo-500"
+                        >
+                          {data.machines.map(m => (
+                            <option key={m.id} value={m.referenceMachine}>{m.referenceMachine} — Ligne {m.numero_ligne}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Pièce consommée */}
+                      <div>
+                        <label className="block text-xs font-mono text-slate-400 mb-1.5">Pièce de rechange</label>
+                        <select
+                          value={maintPiece}
+                          onChange={e => setMaintPiece(e.target.value)}
+                          className="w-full h-12 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white font-mono outline-none focus:border-indigo-500"
+                        >
+                          {data.pieces.map(p => (
+                            <option key={p.id} value={p.referencePiece}>{p.referencePiece} (Stock: {p.quantiteStock})</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Sélecteur tactile + / - pour la quantité consommée */}
+                      <div>
+                        <label className="block text-xs font-mono text-slate-400 mb-1.5">Quantité consommée (Décrémentation)</label>
+                        <div className="flex items-center space-x-3">
+                          <button
+                            type="button"
+                            onClick={() => setMaintQte(Math.max(1, maintQte - 1))}
+                            className="w-14 h-12 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-lg flex items-center justify-center border border-slate-700"
+                          >-</button>
+                          <div className="flex-1 h-12 bg-surface-850 border border-slate-700 rounded-xl flex items-center justify-center font-mono font-extrabold text-xl text-amber-400">
+                            {maintQte}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setMaintQte(maintQte + 1)}
+                            className="w-14 h-12 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-lg flex items-center justify-center border border-slate-700"
+                          >+</button>
+                        </div>
+                      </div>
+
+                      {/* Technicien */}
+                      <div>
+                        <label className="block text-xs font-mono text-slate-400 mb-1.5">Opérateur intervenant</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {data.operateurs.slice(0, 4).map(op => (
+                            <button
+                              key={op.matricule}
+                              type="button"
+                              onClick={() => setMaintOp(op.matricule)}
+                              className={`h-11 rounded-xl font-mono text-xs font-bold transition flex items-center justify-center border ${maintOp === op.matricule
+                                  ? 'bg-indigo-600 text-white border-indigo-500'
+                                  : 'bg-surface-850 text-slate-300 border-slate-700 hover:bg-slate-800'
+                                }`}
+                            >
+                              {op.matricule} ({op.prenom})
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="w-full h-14 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-extrabold text-sm rounded-xl shadow-xl shadow-amber-500/20 transition transform active:scale-95 mt-4"
+                      >
+                        Valider la Décrémentation Stock
+                      </button>
+
+                    </form>
+                  )}
+
+                  {slideOver === 'incident' && (
+                    <form onSubmit={handleCreateIncident} className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-mono text-slate-400 mb-1">N° Incident</label>
+                        <input name="num" type="number" defaultValue="503" required className="w-full h-11 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white font-mono" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-mono text-slate-400 mb-1">Lot impacté</label>
+                        <select name="lot" className="w-full h-11 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white font-mono">
+                          {data.lots.map(l => <option key={l.id} value={l.idLot}>Lot #{l.idLot} ({l.produit_nom})</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-mono text-slate-400 mb-1">Typologie de Panne</label>
+                        <select name="type" className="w-full h-11 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white">
+                          {data.typesIncidents.map(t => <option key={t.id} value={t.libelle}>[{t.codeType}] {t.libelle}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-mono text-slate-400 mb-1">Temps d'arrêt (minutes)</label>
+                        <input name="tps" type="number" defaultValue="40" required className="w-full h-11 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white font-mono" />
+                      </div>
+                      <button
+                        type="submit"
+                        className="w-full h-12 bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-rose-600/30 transition mt-4"
+                      >
+                        Consigner l'Arrêt
+                      </button>
+                    </form>
+                  )}
+
+                  {slideOver === 'atelier' && (
+                    <form onSubmit={handleCreateAtelier} className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-mono text-slate-400 mb-1">Numéro d'Atelier</label>
+                        <input name="num" type="number" defaultValue="30" required className="w-full h-11 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white font-mono" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-mono text-slate-400 mb-1">Libellé de l'Atelier</label>
+                        <input name="lib" type="text" defaultValue="Atelier Peinture & Finitions" required className="w-full h-11 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-mono text-slate-400 mb-1">1ère Ligne (Numéro)</label>
+                          <input name="ligne" type="number" defaultValue="301" required className="w-full h-11 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white font-mono" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-mono text-slate-400 mb-1">Effectif Requis (Op.)</label>
+                          <input name="nbop" type="number" defaultValue="3" min="1" required className="w-full h-11 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white font-mono" />
+                        </div>
+                      </div>
+                      <button
+                        type="submit"
+                        className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-600/30 transition mt-4"
+                      >
+                        Enregistrer l'Atelier & Ligne
+                      </button>
+                    </form>
+                  )}
+
+                  {slideOver === 'lot' && (
+                    <form onSubmit={handleCreateLot} className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-mono text-slate-400 mb-1">Numéro de Lot</label>
+                        <input name="num" type="number" defaultValue="1003" required className="w-full h-11 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white font-mono" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-mono text-slate-400 mb-1">Ligne de fabrication</label>
+                        <select name="ligne" className="w-full h-11 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white font-mono">
+                          {data.ateliers.flatMap(a => a.lignes).map(l => (
+                            <option key={l.id} value={l.numeroLigne}>Ligne #{l.numeroLigne} ({l.nbOperateursNecessaires} op. requis)</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-mono text-slate-400 mb-1">Produit à fabriquer</label>
+                        <select name="prod" className="w-full h-11 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white">
+                          {data.produits.map(p => (
+                            <option key={p.id} value={p.referenceProduit}>{p.referenceProduit} — {p.designation}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="p-3 bg-surface-850 rounded-xl border border-slate-700/60 text-xs text-slate-300">
+                        <span className="font-semibold block mb-1">Ouvriers affectés d'office :</span>
+                        <div className="font-mono text-indigo-400">OP-001 (Thomas Bernard), OP-002 (Sophie Leroy)</div>
+                      </div>
+                      <button
+                        type="submit"
+                        className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-600/30 transition mt-4"
+                      >
+                        Lancer le Lot de Production
+                      </button>
+                    </form>
+                  )}
+
+                  {slideOver === 'produit' && (
+                    <form onSubmit={handleCreateProduit} className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-mono text-slate-400 mb-1">Référence Produit</label>
+                        <input name="ref" type="text" defaultValue="VARIAT-400V" required className="w-full h-11 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white font-mono uppercase" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-mono text-slate-400 mb-1">Désignation</label>
+                        <input name="nom" type="text" defaultValue="Variateur de Fréquence Industriel 400V" required className="w-full h-11 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-mono text-slate-400 mb-1">Prix Unitaire (€)</label>
+                          <input name="prix" type="number" step="0.01" defaultValue="730.00" required className="w-full h-11 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white font-mono" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-mono text-slate-400 mb-1">Stock Initial</label>
+                          <input name="stock" type="number" defaultValue="12" required className="w-full h-11 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white font-mono" />
+                        </div>
+                      </div>
+                      <button
+                        type="submit"
+                        className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-600/30 transition mt-4"
+                      >
+                        Enregistrer au Catalogue
+                      </button>
+                    </form>
+                  )}
+
+                  {slideOver === 'operateur' && (
+                    <form onSubmit={handleCreateOperateur} className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-mono text-slate-400 mb-1">Matricule Unique</label>
+                        <input name="mat" type="text" defaultValue="OP-005" required className="w-full h-11 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white font-mono uppercase" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-mono text-slate-400 mb-1">Prénom</label>
+                          <input name="prenom" type="text" defaultValue="Alexandre" required className="w-full h-11 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-mono text-slate-400 mb-1">Nom</label>
+                          <input name="nom" type="text" defaultValue="Rousseau" required className="w-full h-11 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-mono text-slate-400 mb-1">Équipe d'affectation unique</label>
+                        <select name="eq" className="w-full h-11 bg-surface-850 border border-slate-700 rounded-xl px-3 text-sm text-white">
+                          {data.equipes.map(eq => (
+                            <option key={eq.id} value={eq.id}>Équipe #{eq.numeroEquipe} — {eq.libelle}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        type="submit"
+                        className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-600/30 transition mt-4"
+                      >
+                        Affecter à l'Équipe
+                      </button>
+                    </form>
+                  )}
+
+                </div>
+
+                <div className="text-[11px] text-slate-400 font-mono text-center pt-4 border-t border-slate-800">
+                  Règles métier validées en temps réel
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* TOAST MODERNE TYPE SONNER */}
+          {toast && (
+            <div className="fixed bottom-6 right-6 z-50 flex items-center space-x-3 bg-surface-900 border border-slate-700 text-white px-4 py-3.5 rounded-2xl shadow-2xl animate-in slide-in-from-bottom duration-300">
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold ${toast.type === 'error' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
+                  toast.type === 'warning' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                    'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                }`}>
+                {toast.type === 'error' ? '✕' : toast.type === 'warning' ? '⚠️' : '✓'}
+              </div>
+              <div>
+                <div className="text-xs font-bold text-white">{toast.title}</div>
+                <div className="text-[11px] text-slate-400">{toast.desc}</div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+
+</html>
