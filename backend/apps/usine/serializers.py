@@ -43,6 +43,19 @@ class AtelierSerializer(serializers.ModelSerializer):
             'id', 'numeroAtelier', 'libelle', 'responsable',
             'responsable_detail', 'lignes', 'nombre_lignes'
         ]
+        extra_kwargs = {
+            'responsable': {'required': False, 'allow_null': True}
+        }
+
+    def create(self, validated_data):
+        if 'responsable' not in validated_data or validated_data['responsable'] is None:
+            num = validated_data.get('numeroAtelier', 1)
+            collab = CollaborateurResponsable.objects.create(
+                nom="Superviseur",
+                prenom=f"Atelier #{num}"
+            )
+            validated_data['responsable'] = collab
+        return super().create(validated_data)
 
 
 class MachineSerializer(serializers.ModelSerializer):
@@ -68,6 +81,15 @@ class OperateurSerializer(serializers.ModelSerializer):
             'id', 'matricule', 'nom', 'prenom', 'dateEntree',
             'equipe', 'numero_equipe', 'libelle_equipe'
         ]
+        extra_kwargs = {
+            'dateEntree': {'required': False}
+        }
+
+    def create(self, validated_data):
+        if 'dateEntree' not in validated_data or not validated_data['dateEntree']:
+            from django.utils import timezone
+            validated_data['dateEntree'] = timezone.now().date()
+        return super().create(validated_data)
 
 
 class EquipeSerializer(serializers.ModelSerializer):
@@ -81,4 +103,14 @@ class EquipeSerializer(serializers.ModelSerializer):
             'id', 'numeroEquipe', 'libelle', 'responsable',
             'responsable_detail', 'operateurs', 'effectif'
         ]
+        extra_kwargs = {
+            'responsable': {'required': False, 'allow_null': True}
+        }
 
+    def create(self, validated_data):
+        if 'responsable' not in validated_data or validated_data['responsable'] is None:
+            collab = CollaborateurResponsable.objects.first()
+            if not collab:
+                collab = CollaborateurResponsable.objects.create(nom="Dupont", prenom="Jean")
+            validated_data['responsable'] = collab
+        return super().create(validated_data)

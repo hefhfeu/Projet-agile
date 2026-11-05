@@ -41,13 +41,22 @@ class CompositionPieceSerializer(serializers.ModelSerializer):
     reference_composant = serializers.CharField(source='pieceComposant.referencePiece', read_only=True)
     libelle_composant = serializers.CharField(source='pieceComposant.libelle', read_only=True)
 
+    parent_ref = serializers.CharField(write_only=True, required=False)
+    composant_ref = serializers.CharField(write_only=True, required=False)
+    quantite = serializers.IntegerField(write_only=True, required=False)
+
     class Meta:
         model = CompositionPiece
         fields = [
             'id', 'pieceParent', 'reference_parent', 'libelle_parent',
             'pieceComposant', 'reference_composant', 'libelle_composant',
-            'quantiteComposant'
+            'quantiteComposant', 'parent_ref', 'composant_ref', 'quantite'
         ]
+        extra_kwargs = {
+            'pieceParent': {'required': False},
+            'pieceComposant': {'required': False},
+            'quantiteComposant': {'required': False}
+        }
 
     def validate_quantiteComposant(self, value):
         if value <= 0:
@@ -55,31 +64,41 @@ class CompositionPieceSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, attrs):
-        parent = attrs.get('pieceParent')
-        composant = attrs.get('pieceComposant')
-
-        if parent and composant:
-            verifier_absence_de_cycle(parent.id, composant.id)
-
+        parent_ref = attrs.get('parent_ref')
+        comp_ref = attrs.get('composant_ref')
+        if parent_ref and comp_ref and parent_ref == comp_ref:
+            raise serializers.ValidationError("Cycle interdit : une pièce ne peut pas être un composant d'elle-même.")
         return attrs
+
+    def create(self, validated_data):
+        parent_ref = validated_data.pop('parent_ref', None)
+        comp_ref = validated_data.pop('composant_ref', None)
+        quantite = validated_data.pop('quantite', None)
+
+        if 'pieceParent' not in validated_data and parent_ref:
+            p = Piece.objects.filter(referencePiece=parent_ref).first()
+            if p:
+                validated_data['pieceParent'] = p
+
+        if 'pieceComposant' not in validated_data and comp_ref:
+            c = Piece.objects.filter(referencePiece=comp_ref).first()
+            if c:
+                validated_data['pieceComposant'] = c
+
+        if 'quantiteComposant' not in validated_data and quantite:
+            validated_data['quantiteComposant'] = quantite
+
+        return super().create(validated_data)
 
 
 class AchatPieceSerializer(serializers.ModelSerializer):
+    fournisseur_nom = serializers.CharField(source='fournisseur.raisonSociale', read_only=True)
     reference_piece = serializers.CharField(source='piece.referencePiece', read_only=True)
-    libelle_piece = serializers.CharField(source='piece.libelle', read_only=True)
-    code_fournisseur = serializers.CharField(source='fournisseur.codeFournisseur', read_only=True)
-    nom_fournisseur = serializers.CharField(source='fournisseur.raisonSociale', read_only=True)
 
     class Meta:
         model = AchatPiece
         fields = [
             'id', 'dateAchat', 'prixAchat',
-            'piece', 'reference_piece', 'libelle_piece',
-            'fournisseur', 'code_fournisseur', 'nom_fournisseur'
+            'fournisseur', 'fournisseur_nom',
+            'piece', 'reference_piece'
         ]
-
-    def validate_prixAchat(self, value):
-        if value < 0:
-            raise serializers.ValidationError("Le prix d'achat ne peut pas être négatif.")
-        return value
-

@@ -17,7 +17,7 @@ export default function LoginView({ onLogin, users }) {
       
       // En mode développement / local, on vérifie que le mot de passe correspond ou mot de passe par défaut
       if (foundUser) {
-        onLogin(foundUser);
+        onLogin(foundUser, password);
       } else {
         setError("Identifiant ou mot de passe incorrect. Veuillez vérifier vos accès.");
       }
@@ -29,7 +29,7 @@ export default function LoginView({ onLogin, users }) {
     setUsername(userAccount.username);
     setPassword(defaultPwd);
     setError('');
-    onLogin(userAccount);
+    onLogin(userAccount, defaultPwd);
   };
 
   const accounts = [

@@ -15,16 +15,11 @@ from .serializers import (
     EquipeSerializer,
     OperateurSerializer
 )
-from apps.authentification.permissions import (
-    IsResponsableAtelier,
-    IsCollaborateurResponsable,
-    IsOperateur
-)
 
 class CollaborateurResponsableViewSet(viewsets.ModelViewSet):
     queryset = CollaborateurResponsable.objects.all()
     serializer_class = CollaborateurResponsableSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter]
     search_fields = ['nom', 'prenom']
 
@@ -38,8 +33,8 @@ class AtelierViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsResponsableAtelier()]
-        return [permissions.IsAuthenticated()]
+            return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
 
 
 class LigneProductionViewSet(viewsets.ModelViewSet):
@@ -51,34 +46,29 @@ class LigneProductionViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsResponsableAtelier()]
-        return [permissions.IsAuthenticated()]
+            return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
 
 
 class MachineViewSet(viewsets.ModelViewSet):
     queryset = Machine.objects.select_related('ligne__atelier').all()
     serializer_class = MachineSerializer
+    permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['referenceMachine', 'etat', 'ligne__numeroLigne']
+    search_fields = ['referenceMachine', 'ligne__numeroLigne']
     ordering_fields = ['referenceMachine', 'etat']
-
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsOperateur()]
-        return [permissions.IsAuthenticated()]
 
 
 class EquipeViewSet(viewsets.ModelViewSet):
     queryset = Equipe.objects.select_related('responsable').prefetch_related('operateurs').all()
     serializer_class = EquipeSerializer
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [filters.SearchFilter]
     search_fields = ['libelle', 'numeroEquipe']
-    ordering_fields = ['numeroEquipe', 'libelle']
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsCollaborateurResponsable()]
-        return [permissions.IsAuthenticated()]
+            return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
 
 
 class OperateurViewSet(viewsets.ModelViewSet):
@@ -90,6 +80,5 @@ class OperateurViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsCollaborateurResponsable()]
-        return [permissions.IsAuthenticated()]
-
+            return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
