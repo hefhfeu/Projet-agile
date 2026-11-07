@@ -21,6 +21,7 @@ yarn-error.log*
 .pytest_cache/
 .coverage
 htmlcov/
+backend/staticfiles/
 
 # IDE et OS
 .vscode/

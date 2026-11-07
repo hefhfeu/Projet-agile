@@ -2,7 +2,7 @@
  * Client API HTTP avec gestion des tokens JWT et synchronisation PostgreSQL en temps réel.
  */
 
-const BASE_URL = 'http://localhost:8000/api';
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api').replace(/\/$/, '');
 
 export const authStorage = {
   getToken: () => localStorage.getItem('usine_access_token'),
