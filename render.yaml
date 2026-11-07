@@ -22,5 +22,4 @@ services:
 databases:
   - name: usine-db
     databaseName: usine_db
-    user: postgres
     plan: free
